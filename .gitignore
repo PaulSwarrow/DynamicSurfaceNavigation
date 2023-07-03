@@ -1,0 +1,9 @@
+# Unreal Engine specific files to ignore
+Saved
+Intermediate
+DerivedDataCache
+*.vcxproj
+*.opensdf
+*.sln
+*.xcodeproj
+*.xcworkspace
