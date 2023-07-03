@@ -13,8 +13,8 @@ UCLASS()
 class DYNAMICSURFACENAVIGATION_API AVirtualSurfaceActor : public AActor
 {
 	GENERATED_BODY()
-	
-public:	
+
+public:
 	// Sets default values for this actor's properties
 	AVirtualSurfaceActor();
 
@@ -22,11 +22,11 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-    int FindUniqueIndex();
+	int FindUniqueIndex();
 
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
-public:	
+public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
@@ -37,11 +37,10 @@ public:
 	int ownIndex;
 
 	UPROPERTY(EditAnywhere)
-	AVirtualNavMeshArea* VirtualArea;
+	AVirtualNavMeshArea *VirtualArea;
 
 private:
-	void AddStaticMeshComponent(UStaticMeshComponent* StaticMeshComponent, FTransform ActorTransform); 
+	void AddStaticMeshComponent(UStaticMeshComponent *StaticMeshComponent, FTransform ActorTransform);
 
-	bool IsRootComponent(UStaticMeshComponent* StaticMeshComponent);
-
+	bool IsRootComponent(UStaticMeshComponent *StaticMeshComponent);
 };

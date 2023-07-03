@@ -11,14 +11,13 @@
 #include "AIController.h"
 #include "DSN_MagneticBoots.generated.h"
 
-
-UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
+UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class DYNAMICSURFACENAVIGATION_API UDSN_MagneticBoots : public UActorComponent
 {
 	GENERATED_BODY()
 
 
-public:	
+public:
 	// Sets default values for this component's properties
 	UDSN_MagneticBoots();
 
@@ -26,29 +25,26 @@ protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 
-public:	
+public:
 	// Called every frame
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction *ThisTickFunction) override;
 
 	UFUNCTION(BlueprintCallable, Category = "Custom")
-	void MoveTo(const FVector& Destination);
+	void MoveTo(const FVector &Destination);
 
-	//UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Custom")
-	UDynamicNavSurfaceComponent* CurrentSurface;
+	// UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Custom")
+	UDynamicNavSurfaceComponent *CurrentSurface;
 
+private:
+	ACharacter *CurrentCharacter;
 
-		
-private: 
+	UCharacterMovementComponent *MovementComponent;
 
-	ACharacter* CurrentCharacter;
+	ACharacter *Ghost;
 
-	UCharacterMovementComponent* MovementComponent;
+	AAIController *CurrentController;
 
-	ACharacter* Ghost;
-
-	AAIController* CurrentController;
-
-	void OnReceiveSurface(UDynamicNavSurfaceComponent* Surface);
+	void OnReceiveSurface(UDynamicNavSurfaceComponent *Surface);
 
 	void OnLooseSurface();
 };

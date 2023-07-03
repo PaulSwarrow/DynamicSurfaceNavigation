@@ -13,15 +13,11 @@ UCLASS()
 class DYNAMICSURFACENAVIGATION_API AVirtualNavMeshArea : public ANavMeshBoundsVolume
 {
 	GENERATED_BODY()
-	
-public:	
+
+public:
 	// Sets default values for this actor's properties
 	AVirtualNavMeshArea();
 
-
-public:	
-
-	UChildActorComponent* Volume;	
-
-
+public:
+	UChildActorComponent *Volume;
 };
