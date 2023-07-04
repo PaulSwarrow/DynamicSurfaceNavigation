@@ -82,7 +82,6 @@ void UDSN_MagneticBoots::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 		GhostMovementComponent->AddInputVector(Input);
 		// Restore velocity (if it is caused by ghost's AI)
 		MovementComponent->Velocity = CurrentSurface->TransformDirectionVirtual2World(GhostMovementComponent->Velocity);
-		UE_LOG(LogTemp, Warning, TEXT("Ghost V: %s, Character V: %s"), *GhostMovementComponent->Velocity.ToString(), *MovementComponent->Velocity.ToString());
 		// GhostMovementComponent->Velocity = velocity;
 
 		// WHILE NAVIGATING:
