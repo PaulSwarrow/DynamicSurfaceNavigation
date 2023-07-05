@@ -1,10 +1,11 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
+// Copyright Pagan Games. All rights reserved.
 
 #include "DynamicSurfaceNavigation.h"
 #include "Modules/ModuleManager.h"
 #include "Modules/ModuleInterface.h"
 #include "DNavSurfaceComponentVisualizer.h"
 #include "DynamicNavSurfaceComponent.h"
+#include "StableBuoyancyComponent.h"
 #include "UnrealEd.h"
 
 #define LOCTEXT_NAMESPACE "FDynamicSurfaceNavigationModule"

@@ -10,6 +10,7 @@ public class DynamicSurfaceNavigation : ModuleRules
 		
 		PublicIncludePaths.AddRange(
 			new string[] {
+
 				// ... add public include paths required here ...
 			}
 			);
@@ -17,6 +18,7 @@ public class DynamicSurfaceNavigation : ModuleRules
 		
 		PrivateIncludePaths.AddRange(
 			new string[] {
+				"DynamicSurfaceNavigation/Public"
 				// ... add other private include paths required here ...
 			}
 			);

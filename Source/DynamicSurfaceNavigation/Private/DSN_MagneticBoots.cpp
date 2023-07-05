@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Copyright Pagan Games. All rights reserved.
 
 #include "DSN_MagneticBoots.h"
 #include "GameFramework/Character.h"

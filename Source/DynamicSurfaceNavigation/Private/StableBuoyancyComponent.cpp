@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Copyright Pagan Games. All rights reserved.
 
 #include "StableBuoyancyComponent.h"
 
@@ -11,9 +11,22 @@ void UStableBuoyancyComponent::BeginPlay()
 {
     Super::BeginPlay();
     GeneratePantoons();
+    if(FixCenterOfMass) {
+        auto Root = Cast<UPrimitiveComponent>(GetOwner()->GetRootComponent());
+        auto Center = GetOwner()->GetTransform().InverseTransformPosition(Root->GetCenterOfMass());
+        UE_LOG(LogTemp, Warning, TEXT("OLD Center: %s"), *Center.ToString());
+        //Center = Center;
+        Root->SetCenterOfMass(FVector::ZeroVector);
+        auto NewCenter = Root->GetCenterOfMass();
+        NewCenter = GetOwner()->GetTransform().InverseTransformPosition(NewCenter);
+        UE_LOG(LogTemp, Warning, TEXT("Local(?) Center: %s"), *NewCenter.ToString());
+    }
+
+    //TODO LOG Center
+
 }
 
-float UStableBuoyancyComponent::GetWaterLevel(FVector WorldPosition) const
+float UStableBuoyancyComponent::GetWaterLevel_Implementation(FVector WorldPosition) const
 {
     return 0.0f;
 }
@@ -46,23 +59,6 @@ void UStableBuoyancyComponent::TickComponent(float DeltaTime, ELevelTick TickTyp
     float SpringConstant = Gravity * Mass / 2 * Buoyancy; // Adjust the spring constant as needed
     float Prediction = GravityForce.Z / (SpringConstant * DeltaTime);
 
-    //ApplyForceToPoint(Root, GetOwner()->GetActorLocation() + FVector(0, 0, -Prediction), SpringConstant, DeltaTime);
-    /*auto Point = GetOwner()->GetActorLocation();
-    auto DeltaZ = GetWaterLevel(Point) - Point.Z + Prediction;
-    // Check if the actor is below the water surface
-    if (DeltaZ > 0.0f)
-    {
-        FVector SpringForce = -FVector(0.0f, 0.0f, SpringConstant) * DeltaZ * DeltaTime;
-
-        // Calculate the damping force based on the actor's velocity
-        FVector Velocity = Root->GetPhysicsLinearVelocity();
-        float DampingFactor = abs(SpringConstant * DragCoefficient); // Adjust the damping factor as needed
-        FVector DampingForce = -DampingFactor * Velocity * DeltaTime;
-        UE_LOG(LogTemp, Warning, TEXT("DeltaTime: %f, M: %f, V: %f, SF: %f, D: %f, Offset: %f, Equilibruim: %f"), DeltaTime, Mass, Velocity.Z, SpringForce.Z, DampingForce.Z, DeltaZ, Prediction);
-
-        // Apply the combined force to the actor's root component
-        Root->AddForceAtLocation(SpringForce+ DampingForce, GetOwner()->GetActorLocation());
-    }*/
 
     for (const FVector &Panton : Pantons)
     {

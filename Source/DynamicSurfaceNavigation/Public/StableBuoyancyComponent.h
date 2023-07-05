@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Copyright Pagan Games. All rights reserved.
 
 #pragma once
 
@@ -9,7 +9,7 @@
 /**
  *
  */
-UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
+UCLASS(Blueprintable, ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class DYNAMICSURFACENAVIGATION_API UStableBuoyancyComponent : public USplineComponent
 {
 	GENERATED_BODY()
@@ -30,11 +30,20 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "StableBuoyancy")
 	float DragCoefficient = 0.1f;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "StableBuoyancy")
+	bool FixCenterOfMass = true;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "StableBuoyancy")
+	FVector FixedCenterOfMass = FVector(0.0f, 0.0f, -100.0f);
+
 protected:
-	// Called when the game starts
+	// Called when the gaame starts
 	virtual void BeginPlay() override;
 
-	virtual float GetWaterLevel(FVector WorldPosition) const;
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "StableBuoyancy")
+	float GetWaterLevel(FVector WorldPosition) const;
+
+	virtual float GetWaterLevel_Implementation(FVector WorldPosition) const;
 
 private:
 	void GeneratePantoons();
