@@ -5,7 +5,6 @@
 #include "Modules/ModuleInterface.h"
 #include "DNavSurfaceComponentVisualizer.h"
 #include "DynamicNavSurfaceComponent.h"
-#include "StableBuoyancyComponent.h"
 #include "UnrealEd.h"
 
 #define LOCTEXT_NAMESPACE "FDynamicSurfaceNavigationModule"
