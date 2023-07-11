@@ -17,14 +17,17 @@ UDynamicNavSurfaceComponent::UDynamicNavSurfaceComponent()
 void UDynamicNavSurfaceComponent::BeginPlay()
 {
     Super::BeginPlay();
-
+    if(VirtualArea == nullptr)
+    {
+        return;
+    }
     // Create an instance of AVirtualSurfaceActor with a name of "VirtualSurfaceActor"
     VirtualSurfaceActor = GetWorld()->SpawnActor<AVirtualSurfaceActor>(
         AVirtualSurfaceActor::StaticClass(),
         FVector::ZeroVector,
         FRotator::ZeroRotator,
         FActorSpawnParameters());
-
+ 
     FString ActorName = GetOwner()->GetName() + "_VirtualSurfaceActor";
     VirtualSurfaceActor->Rename(*ActorName, nullptr, REN_DontCreateRedirectors);
 

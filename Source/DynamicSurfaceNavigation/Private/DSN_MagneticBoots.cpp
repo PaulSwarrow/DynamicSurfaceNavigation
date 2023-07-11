@@ -7,7 +7,8 @@
 #include "AIController.h"
 #include "Blueprint/AIBlueprintHelperLibrary.h"
 #include "NavigationSystem.h"
-#include "DynamicNavSurfaceComponent.h"
+#include "DynamicNavSurfaceComponent.h"	
+#include "Components/CapsuleComponent.h"
 
 // Sets default values for this component's properties
 UDSN_MagneticBoots::UDSN_MagneticBoots()
@@ -58,8 +59,20 @@ void UDSN_MagneticBoots::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 
 	if (Ghost != nullptr)
 	{
+		//Get Virtual Transform (with feet level adjustement):
+		FTransform GhostTransform;
+		GhostTransform.SetLocation(Ghost->GetActorLocation()- FVector:: UpVector * Ghost->GetCapsuleComponent()->GetScaledCapsuleHalfHeight());
+		GhostTransform.SetRotation(Ghost->GetTransform().GetRotation());
+		GhostTransform.SetScale3D(FVector::OneVector);
+		//Transform Virtual to World and restore Upwards direction:
+		FTransform DesiredTransform = Surface->TransformVirtual2World(GhostTransform, true);
+		//Apply Transform (with feet level adjustement):
+		SetFeetPosition(DesiredTransform.GetLocation()); //feet position correction (if pivot is in the center o the actor)
+		GetOwner()->SetActorRotation(DesiredTransform.GetRotation());
+		//No scaling required
 
-		GetOwner()->SetActorTransform(Surface->TransformVirtual2World(Ghost->GetActorTransform(), true));
+		
+		//GetOwner()->SetActorTransform(DesiredTransform);
 		auto velocity = MovementComponent->Velocity;
 		auto GhostMovementComponent = Ghost->GetCharacterMovement();
 		GhostMovementComponent->MaxCustomMovementSpeed = MovementComponent->GetMaxSpeed();
@@ -123,10 +136,12 @@ void UDSN_MagneticBoots::OnReceiveSurface(UDynamicNavSurfaceComponent *Surface)
 {
 	CurrentSurface = Surface;
 	// TODO Create Character actor
-	const FTransform Location = Surface->TransformWorld2Virtual(GetOwner()->GetActorTransform(), true);
-	Ghost = GetWorld()->SpawnActor<ADSN_Ghost>(ADSN_Ghost::StaticClass(), Location, FActorSpawnParameters());
+	FTransform CurrentTransform(GetOwner()->GetActorRotation(), GetFeetPosition());
+	//const FTransform Location = Surface->TransformWorld2Virtual(GetOwner()->GetActorTransform(), true);
+	const FTransform VirtualTransform = Surface->TransformWorld2Virtual(CurrentTransform, true);
+	Ghost = GetWorld()->SpawnActor<ADSN_Ghost>(ADSN_Ghost::StaticClass(), VirtualTransform, FActorSpawnParameters());
 
-	AAIController *AIController = GetWorld()->SpawnActor<AAIController>(AAIController::StaticClass(), Location, FActorSpawnParameters());
+	AAIController *AIController = GetWorld()->SpawnActor<AAIController>(AAIController::StaticClass(), VirtualTransform, FActorSpawnParameters());
 	if (AIController)
 	{
 		AIController->Possess(Ghost);
@@ -142,4 +157,16 @@ void UDSN_MagneticBoots::OnLooseSurface()
 		Ghost = nullptr;
 	}
 	CurrentSurface = nullptr;
+}
+
+FVector UDSN_MagneticBoots::GetFeetPosition()
+{
+    return GetOwner()->GetTransform().TransformPosition(FeetOffset);
+}
+
+void UDSN_MagneticBoots::SetFeetPosition(FVector WorldPosition)
+{
+
+	FVector Position = WorldPosition - GetOwner()->GetActorTransform().TransformVector(FeetOffset);
+	GetOwner()->SetActorLocation(Position);
 }

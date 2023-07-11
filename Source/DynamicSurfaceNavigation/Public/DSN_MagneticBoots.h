@@ -29,8 +29,11 @@ public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction *ThisTickFunction) override;
 
-	UFUNCTION(BlueprintCallable, Category = "Custom")
+	UFUNCTION(BlueprintCallable, Category = "DynamicSurfaceNavigation")
 	void MoveTo(const FVector &Destination);
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "DynamicSurfaceNavigation", meta = (Tooltip = "Offset for the lowest point of the actor. If Actor's pivot is at the floor - keep it zero."))
+	FVector FeetOffset;
 
 	// UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Custom")
 	UDynamicNavSurfaceComponent *CurrentSurface;
@@ -47,4 +50,8 @@ private:
 	void OnReceiveSurface(UDynamicNavSurfaceComponent *Surface);
 
 	void OnLooseSurface();
+
+	FVector GetFeetPosition();
+
+	void SetFeetPosition(FVector Position);
 };
