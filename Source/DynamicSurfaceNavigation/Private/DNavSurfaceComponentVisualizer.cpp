@@ -19,10 +19,8 @@ void DNavSurfaceComponentVisualizer::DrawVisualization(const UActorComponent *Co
         return;
     }
     auto navmesh = Cast<ARecastNavMesh>(navsys->GetMainNavData());
-    auto CellSize = navmesh->CellSize;
     auto TileSize = navmesh->TileSizeUU;
     //
-    // UE_LOG(LogTemp, Warning, TEXT("Cell: %f Tile sizes: %f"), CellSize, TileSize);
     int32 TileX;
     int32 TileY;
     TArray<int32> TileIndices;

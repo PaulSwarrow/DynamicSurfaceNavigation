@@ -30,27 +30,31 @@ void AVirtualSurfaceActor::Init(AActor *realSurfaceActor)
 {
 
     // Find a unique index for this surface
-    auto area = UGameplayStatics::GetActorOfClass(GetWorld(), AVirtualNavMeshArea::StaticClass());
-    auto origin = area->GetActorLocation();
+    auto area = Cast<AVirtualNavMeshArea>(UGameplayStatics::GetActorOfClass(GetWorld(), AVirtualNavMeshArea::StaticClass()));
+    FVector Center;
+    FVector Bounds;
+    realSurfaceActor->GetActorBounds(true, Center, Bounds, true);
+    Bounds *= 2;
+    FIntVector ActorVolume = area->GetNavBounds(Bounds, false);
 
-    ownIndex = FindUniqueIndex();
-    // VirtualSurfaces.push_back(ownIndex);
-    //  Set actor location based on index
-    FVector location = origin + FVector(ownIndex * 1000, 0, 0);
-    SetActorLocation(location);
-
-    // Copy static meshes:
-    TArray<UStaticMeshComponent *> StaticMeshComponents;
-    realSurfaceActor->GetComponents(StaticMeshComponents);
-    FTransform ActorTransform = realSurfaceActor->GetActorTransform();
-    for (UStaticMeshComponent *StaticMeshComponent : StaticMeshComponents)
+    FIntVector Coord;
+    if(area->FindPlace(ActorVolume, Coord)) 
     {
-        AddStaticMeshComponent(StaticMeshComponent, ActorTransform);
+        area->ReservePlace(ActorVolume, Coord);
+        SetActorLocation(area->GetReservedLocation(ActorVolume, Coord));
+        // Copy static meshes:
+        TArray<UStaticMeshComponent *> StaticMeshComponents;
+        realSurfaceActor->GetComponents(StaticMeshComponents);
+        FTransform ActorTransform = realSurfaceActor->GetActorTransform();
+        for (UStaticMeshComponent *StaticMeshComponent : StaticMeshComponents)
+        {
+            AddStaticMeshComponent(StaticMeshComponent, ActorTransform);
+        }
+
+    } else {
+        UE_LOG(LogTemp, Error, TEXT("Failed to find place!"));
     }
 
-    // Occupancy bounds
-    // FVector ActorBounds;
-    // realSurfaceActor->GetActorBounds(true, realSurfaceActor-> GetActorLocation(), ActorBounds, true);
 }
 
 // Called when the game starts or when spawned
