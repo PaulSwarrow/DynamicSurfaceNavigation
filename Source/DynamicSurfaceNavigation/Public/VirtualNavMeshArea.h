@@ -7,7 +7,10 @@
 #include "Components/ChildActorComponent.h"
 #include "Components/BrushComponent.h"
 #include "NavMesh/NavMeshBoundsVolume.h"
+#include "DynamicNavSurfaceComponent.h"
+#include "VirtualSurfaceActor.h"
 #include <vector>
+#include <unordered_map>
 #include "VirtualNavMeshArea.generated.h"
 
 UCLASS()
@@ -32,10 +35,15 @@ public:
 
 	FIntVector GetNavBounds(const FVector Volume, bool RoundDown);
 
+	virtual void Tick(float DeltaTime) override;
+
 protected:
 	virtual void BeginPlay() override;
 
 private:
+	std::unordered_map<UDynamicNavSurfaceComponent *, AVirtualSurfaceActor *> ChildrenMap;
+	void AddSurface(UDynamicNavSurfaceComponent *Surface);
+	void RemoveSurface(UDynamicNavSurfaceComponent *Surface);
 	void LazyInit();
 	bool Initialized;
 	float CellSize;

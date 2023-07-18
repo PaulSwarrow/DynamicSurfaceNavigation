@@ -4,6 +4,11 @@
 #include "NavMesh/RecastNavMesh.h"
 #include "VirtualSurfaceActor.h"
 #include "NavigationSystem.h"
+#include "Kismet/GameplayStatics.h"
+#include <unordered_set>
+
+std::unordered_set<UDynamicNavSurfaceComponent *> UDynamicNavSurfaceComponent::RegisterQueue;
+std::unordered_set<UDynamicNavSurfaceComponent *> UDynamicNavSurfaceComponent::UnregisterQueue;
 
 // Sets default values for this component's properties
 UDynamicNavSurfaceComponent::UDynamicNavSurfaceComponent()
@@ -17,36 +22,24 @@ UDynamicNavSurfaceComponent::UDynamicNavSurfaceComponent()
 void UDynamicNavSurfaceComponent::BeginPlay()
 {
     Super::BeginPlay();
-    if(VirtualArea == nullptr)
-    {
-        return;
-    }
-    // Create an instance of AVirtualSurfaceActor with a name of "VirtualSurfaceActor"
-    VirtualSurfaceActor = GetWorld()->SpawnActor<AVirtualSurfaceActor>(
-        AVirtualSurfaceActor::StaticClass(),
-        FVector::ZeroVector,
-        FRotator::ZeroRotator,
-        FActorSpawnParameters());
- 
-    FString ActorName = GetOwner()->GetName() + "_VirtualSurfaceActor";
-    VirtualSurfaceActor->Rename(*ActorName, nullptr, REN_DontCreateRedirectors);
-
-    VirtualSurfaceActor->VirtualArea = VirtualArea;
-
-    VirtualSurfaceActor->Init(GetOwner());
+    // TODO fined AVirtualNAvMeshArea instance
+    UnregisterQueue.erase(this);
+    RegisterQueue.insert(this);
 }
 
-// Called every frame
-void UDynamicNavSurfaceComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction *ThisTickFunction)
+void UDynamicNavSurfaceComponent::LazyInit()
 {
-    Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
-    // ...
 }
 
-FTransform UDynamicNavSurfaceComponent::TransformWorld2Virtual(FTransform WorldTransform, bool KeepUpDirection) const
+void UDynamicNavSurfaceComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
+    UnregisterQueue.insert(this);
+    RegisterQueue.erase(this);
+}
 
+FTransform UDynamicNavSurfaceComponent::TransformWorld2Virtual(FTransform WorldTransform, bool KeepUpDirection)
+{
+    LazyInit();
     if (VirtualSurfaceActor == nullptr)
     {
         return WorldTransform;
@@ -69,8 +62,9 @@ FTransform UDynamicNavSurfaceComponent::TransformWorld2Virtual(FTransform WorldT
     return ResultTransform;
 }
 
-FTransform UDynamicNavSurfaceComponent::TransformVirtual2World(FTransform VirtualTransform, bool RestoreUpDirection) const
+FTransform UDynamicNavSurfaceComponent::TransformVirtual2World(FTransform VirtualTransform, bool RestoreUpDirection)
 {
+    LazyInit();
     if (VirtualSurfaceActor == nullptr)
     {
         return VirtualTransform;
@@ -92,8 +86,9 @@ FTransform UDynamicNavSurfaceComponent::TransformVirtual2World(FTransform Virtua
     return ResultTransform;
 }
 
-FVector UDynamicNavSurfaceComponent::TransformDirectionWorld2Virtual(FVector WorldDirection) const
+FVector UDynamicNavSurfaceComponent::TransformDirectionWorld2Virtual(FVector WorldDirection)
 {
+    LazyInit();
     if (VirtualSurfaceActor == nullptr)
     {
         return WorldDirection;
@@ -109,8 +104,9 @@ FVector UDynamicNavSurfaceComponent::TransformDirectionWorld2Virtual(FVector Wor
     return T2.TransformVector(localVector);
 }
 
-FVector UDynamicNavSurfaceComponent::TransformDirectionVirtual2World(FVector VirtualDirection) const
+FVector UDynamicNavSurfaceComponent::TransformDirectionVirtual2World(FVector VirtualDirection)
 {
+    LazyInit();
     if (VirtualSurfaceActor == nullptr)
     {
         return VirtualDirection;
@@ -123,8 +119,9 @@ FVector UDynamicNavSurfaceComponent::TransformDirectionVirtual2World(FVector Vir
     return T2.TransformVector(localVector);
 }
 
-FVector UDynamicNavSurfaceComponent::TransformPositionWorld2Virtual(FVector WorldPosition) const
+FVector UDynamicNavSurfaceComponent::TransformPositionWorld2Virtual(FVector WorldPosition)
 {
+    LazyInit();
     if (VirtualSurfaceActor == nullptr)
     {
         return WorldPosition;
@@ -133,8 +130,9 @@ FVector UDynamicNavSurfaceComponent::TransformPositionWorld2Virtual(FVector Worl
     return VirtualSurfaceActor->GetTransform().TransformPosition(localPosition);
 }
 
-FVector UDynamicNavSurfaceComponent::GetVelocityAtPosition(FVector WorldPosition) const
+FVector UDynamicNavSurfaceComponent::GetVelocityAtPosition(FVector WorldPosition)
 {
+    LazyInit();
     UPrimitiveComponent *StaticMeshComponent = Cast<UPrimitiveComponent>(GetOwner()->GetRootComponent());
 
     if (StaticMeshComponent)

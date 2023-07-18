@@ -4,8 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
-#include "VirtualNavMeshArea.h"
 #include "VirtualSurfaceActor.h"
+#include <unordered_set>
 #include "DynamicNavSurfaceComponent.generated.h"
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
@@ -22,23 +22,24 @@ protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 
-public:
-	// Called every frame
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction *ThisTickFunction) override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+
 
 public:
-	int ownIndex;
-
-	UPROPERTY(EditAnywhere)
-	AVirtualNavMeshArea *VirtualArea;
-
 	AVirtualSurfaceActor *VirtualSurfaceActor;
 
-	FTransform TransformWorld2Virtual(FTransform WorldTransform, bool KeepUpDirection) const;
-	FTransform TransformVirtual2World(FTransform VirtualTransform, bool RestoreUpDirection) const;
-	FVector TransformPositionWorld2Virtual(FVector WorldPosition) const;
-	FVector TransformDirectionWorld2Virtual(FVector WorldDirection) const;
-	FVector TransformDirectionVirtual2World(FVector VirtualDirection) const;
+	FTransform TransformWorld2Virtual(FTransform WorldTransform, bool KeepUpDirection);
+	FTransform TransformVirtual2World(FTransform VirtualTransform, bool RestoreUpDirection);
+	FVector TransformPositionWorld2Virtual(FVector WorldPosition);
+	FVector TransformDirectionWorld2Virtual(FVector WorldDirection);
+	FVector TransformDirectionVirtual2World(FVector VirtualDirection);
 
-	FVector GetVelocityAtPosition(FVector WorldPosition) const;
+	FVector GetVelocityAtPosition(FVector WorldPosition);
+	
+	static std::unordered_set<UDynamicNavSurfaceComponent*> RegisterQueue;
+	static std::unordered_set<UDynamicNavSurfaceComponent*> UnregisterQueue;
+
+private:
+	void LazyInit();
+	bool bInitialized;
 };

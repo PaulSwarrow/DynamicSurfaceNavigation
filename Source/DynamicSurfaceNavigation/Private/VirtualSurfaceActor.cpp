@@ -3,7 +3,6 @@
 #include "VirtualSurfaceActor.h"
 #include "Kismet/GameplayStatics.h"
 #include "NavigationSystem.h"
-#include "VirtualNavMeshArea.h"
 #include "NavMesh/NavMeshBoundsVolume.h"
 #include "Components/BrushComponent.h"
 #include "Builders/CubeBuilder.h"
@@ -14,8 +13,7 @@
 #include "AI/NavigationSystemBase.h"
 #include "NavMesh/RecastNavMesh.h"
 #include "AI/Navigation/NavigationTypes.h"
-
-std::vector<int> AVirtualSurfaceActor::VirtualSurfaces;
+#include <stdexcept>
 
 // Sets default values
 AVirtualSurfaceActor::AVirtualSurfaceActor()
@@ -26,64 +24,26 @@ AVirtualSurfaceActor::AVirtualSurfaceActor()
     RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("MyRootComponent"));
 }
 
-void AVirtualSurfaceActor::Init(AActor *realSurfaceActor)
+void AVirtualSurfaceActor::Init(AActor *realSurfaceActor, FIntVector Volume, FIntVector Coord)
 {
-
-    // Find a unique index for this surface
-    auto area = Cast<AVirtualNavMeshArea>(UGameplayStatics::GetActorOfClass(GetWorld(), AVirtualNavMeshArea::StaticClass()));
-    FVector Center;
-    FVector Bounds;
-    realSurfaceActor->GetActorBounds(true, Center, Bounds, true);
-    Bounds *= 2;
-    FIntVector ActorVolume = area->GetNavBounds(Bounds, false);
-
-    FIntVector Coord;
-    if(area->FindPlace(ActorVolume, Coord)) 
+    FString ActorName = realSurfaceActor->GetName() + "_VirtualSurfaceActor";
+    SetActorLabel(*ActorName);
+    this->ActorVolume = Volume;
+    this->ActorCoord = Coord;
+    // Copy static meshes:
+    TArray<UStaticMeshComponent *> StaticMeshComponents;
+    realSurfaceActor->GetComponents(StaticMeshComponents);
+    FTransform ActorTransform = realSurfaceActor->GetActorTransform();
+    for (UStaticMeshComponent *StaticMeshComponent : StaticMeshComponents)
     {
-        area->ReservePlace(ActorVolume, Coord);
-        SetActorLocation(area->GetReservedLocation(ActorVolume, Coord));
-        // Copy static meshes:
-        TArray<UStaticMeshComponent *> StaticMeshComponents;
-        realSurfaceActor->GetComponents(StaticMeshComponents);
-        FTransform ActorTransform = realSurfaceActor->GetActorTransform();
-        for (UStaticMeshComponent *StaticMeshComponent : StaticMeshComponents)
-        {
-            AddStaticMeshComponent(StaticMeshComponent, ActorTransform);
-        }
-
-    } else {
-        UE_LOG(LogTemp, Error, TEXT("Failed to find place!"));
+        AddStaticMeshComponent(StaticMeshComponent, ActorTransform);
     }
-
 }
 
 // Called when the game starts or when spawned
 void AVirtualSurfaceActor::BeginPlay()
 {
     Super::BeginPlay();
-}
-int AVirtualSurfaceActor::FindUniqueIndex()
-{
-    // this assumes that VirtualSurfaces is ordered from lowest index to highest
-    int index = 0;
-    for (int i : VirtualSurfaces)
-    {
-        if (i == index)
-        {
-            ++index;
-        }
-    }
-    return index;
-}
-
-void AVirtualSurfaceActor::EndPlay(const EEndPlayReason::Type EndPlayReason)
-{
-}
-
-// Called every frame
-void AVirtualSurfaceActor::Tick(float DeltaTime)
-{
-    Super::Tick(DeltaTime);
 }
 
 void AVirtualSurfaceActor::AddStaticMeshComponent(UStaticMeshComponent *StaticMeshComponent, FTransform ActorTransform)
