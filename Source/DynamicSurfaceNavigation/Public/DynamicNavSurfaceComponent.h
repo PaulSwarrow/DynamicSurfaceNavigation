@@ -28,18 +28,15 @@ protected:
 public:
 	AVirtualSurfaceActor *VirtualSurfaceActor;
 
-	FTransform TransformWorld2Virtual(FTransform WorldTransform, bool KeepUpDirection);
-	FTransform TransformVirtual2World(FTransform VirtualTransform, bool RestoreUpDirection);
-	FVector TransformPositionWorld2Virtual(FVector WorldPosition);
-	FVector TransformDirectionWorld2Virtual(FVector WorldDirection);
-	FVector TransformDirectionVirtual2World(FVector VirtualDirection);
+	FTransform TransformWorld2Virtual(FTransform WorldTransform, bool KeepUpDirection) const;
+	FTransform TransformVirtual2World(FTransform VirtualTransform, bool RestoreUpDirection) const;
+	FVector TransformPositionWorld2Virtual(FVector WorldPosition) const;
+	FVector TransformDirectionWorld2Virtual(FVector WorldDirection) const;
+	FVector TransformDirectionVirtual2World(FVector VirtualDirection) const;
 
-	FVector GetVelocityAtPosition(FVector WorldPosition);
+	FVector GetVelocityAtPosition(FVector WorldPosition) const;
 	
 	static std::unordered_set<UDynamicNavSurfaceComponent*> RegisterQueue;
 	static std::unordered_set<UDynamicNavSurfaceComponent*> UnregisterQueue;
 
-private:
-	void LazyInit();
-	bool bInitialized;
 };
