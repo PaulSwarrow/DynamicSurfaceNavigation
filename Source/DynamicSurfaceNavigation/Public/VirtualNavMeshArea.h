@@ -69,7 +69,7 @@ private:
 	
 	std::unordered_map<AActor*, FVirtualNavMesh> PendingAddings; //actor creation pending
 
-	FIntVector GetNavBounds(const FVector Volume, bool RoundDown);
+	FIntVector GetNavBounds(const FVector Volume);
 	bool FindPlace(const FIntVector Volume, FIntVector &Coord);
 	void ReservePlace(const FIntVector Volume, FIntVector Coord);
 	void ReleasePlace(const FIntVector Volume, FIntVector Coord);
