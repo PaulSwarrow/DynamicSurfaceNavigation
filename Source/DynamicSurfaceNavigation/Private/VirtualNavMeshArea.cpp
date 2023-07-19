@@ -4,6 +4,8 @@
 #include "Components/ChildActorComponent.h"
 #include "NavMesh/NavMeshBoundsVolume.h"
 #include "NavigationSystem.h"
+#include <vector>
+#include <unordered_map>
 #include "NavMesh/RecastNavMesh.h"
 
 // Sets default values
@@ -30,12 +32,6 @@ void AVirtualNavMeshArea::LazyInit()
 		return;
 	}
 
-	auto navsys = GetWorld()->GetNavigationSystem();
-	if (navsys == nullptr)
-	{
-		return;
-	}
-	auto navmesh = Cast<ARecastNavMesh>(navsys->GetMainNavData());
 	float TileSize;
 	GConfig->GetFloat(
 		TEXT("/Script/NavigationSystem.RecastNavMesh"),
@@ -50,6 +46,76 @@ void AVirtualNavMeshArea::LazyInit()
 	Grid.resize(AreaBounds.X, std::vector<std::vector<bool>>(AreaBounds.Y, std::vector<bool>(AreaBounds.Z, false)));
 	UE_LOG(LogTemp, Warning, TEXT("VNMA Init: Tile: %f, Bounds: %s"), TileSize, *AreaBounds.ToString());
 	Initialized = true;
+}
+void AVirtualNavMeshArea::Tick(float DeltaTime)
+{
+	for (const auto &element : PendingAddings)
+	{
+		AddSurface(element.first, element.second);
+	}
+
+	PendingAddings.clear();
+}
+
+bool AVirtualNavMeshArea::TryCreateVirtualNavMesh(AActor *realSurfaceActor, FVirtualNavMesh &VirtualNavMesh)
+{
+	if(PendingAddings.find(realSurfaceActor) != PendingAddings.end())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("VNMA: Actor has already been registered: %s"), *realSurfaceActor->GetName());
+		return false;
+	}
+
+	//calculate required volume:
+	FVector Center;
+	FVector Bounds;
+	realSurfaceActor->GetActorBounds(true, Center, Bounds, true);
+	Bounds *= 2;
+	auto Volume = GetNavBounds(Bounds, false);
+	//Search for place available
+	FIntVector Coord;
+	if(FindPlace(Volume, Coord))
+	{
+		FTransform VirtualTransform(GetReservedLocation(Volume, Coord));
+		//reservation data:
+		VirtualNavMesh.Coord = Coord;
+		VirtualNavMesh.Transform = VirtualTransform;
+		//reserve:
+		ReservePlace(Volume, Coord);
+
+		//pend virtual actor creation:
+		PendingAddings[realSurfaceActor] = VirtualNavMesh;
+		return true;
+	}
+    return false;
+}
+
+void AVirtualNavMeshArea::ReleaseVirtualNavMesh(AActor *realSurfaceActor, FIntVector Coord)
+{	
+	if(PendingAddings.find(realSurfaceActor) != PendingAddings.end())
+	{
+		PendingAddings.erase(realSurfaceActor);
+	}
+
+	//TODO provide more safety!
+	if(Coord2Volume.find(Coord) != Coord2Volume.end())
+	{
+		//release volume:
+		ReleasePlace(Coord2Volume[Coord], Coord);
+		Coord2Volume.erase(Coord);
+
+		//destroy virtual actor:
+		if(Coord2Actor.find(Coord) != Coord2Actor.end())
+		{
+			Coord2Actor[Coord]->Destroy();
+			Coord2Actor.erase(Coord);
+		}
+	}
+	else 
+	{
+		UE_LOG(LogTemp, Error, TEXT("VNMA: Can not release %s: actor hasn't been registered"), *realSurfaceActor->GetName());
+	}
+
+
 }
 
 FIntVector AVirtualNavMeshArea::GetNavBounds(const FVector Volume, bool RoundDown)
@@ -66,77 +132,12 @@ FIntVector AVirtualNavMeshArea::GetNavBounds(const FVector Volume, bool RoundDow
 	}
 }
 
-void AVirtualNavMeshArea::Tick(float DeltaTime)
-{
-	for (const auto &element : UDynamicNavSurfaceComponent::RegisterQueue)
-	{
-		AddSurface(element);
-	}
-
-	for (const auto &element : UDynamicNavSurfaceComponent::UnregisterQueue)
-	{
-		RemoveSurface(element);
-	}
-
-	UDynamicNavSurfaceComponent::RegisterQueue.clear();
-	UDynamicNavSurfaceComponent::UnregisterQueue.clear();
-}
-
-void AVirtualNavMeshArea::AddSurface(UDynamicNavSurfaceComponent *Surface)
-{
-	FVector Center;
-	FVector Bounds;
-	Surface->GetOwner()->GetActorBounds(true, Center, Bounds, true);
-	Bounds *= 2;
-	auto ActorVolume = GetNavBounds(Bounds, false);
-	FIntVector Coord;
-	if (FindPlace(ActorVolume, Coord))
-	{
-		ReservePlace(ActorVolume, Coord);
-	}
-	else
-	{
-		UE_LOG(LogTemp, Error, TEXT("Failed to find place!"));
-		return;
-	}
-
-	FActorSpawnParameters SpawnParams;
-	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-
-	auto VirtualSurfaceActor = GetWorld()->SpawnActor<AVirtualSurfaceActor>(
-		AVirtualSurfaceActor::StaticClass(),
-		GetReservedLocation(ActorVolume, Coord),
-		FRotator::ZeroRotator,
-		SpawnParams);
-
-	if (VirtualSurfaceActor != nullptr)
-	{
-		Surface->VirtualSurfaceActor = VirtualSurfaceActor;
-		VirtualSurfaceActor->Init(Surface->GetOwner(), ActorVolume, Coord);
-		ChildrenMap[Surface] = VirtualSurfaceActor;
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("VNMA: Surface %s failed to spawn virtual actor"), *Surface->GetOwner()->GetName());
-		return;
-	}
-}
-
-void AVirtualNavMeshArea::RemoveSurface(UDynamicNavSurfaceComponent *Surface)
-{
-	if (ChildrenMap.find(Surface) != ChildrenMap.end())
-	{
-		auto VirtualSurfaceActor = ChildrenMap[Surface];
-		ReleasePlace(VirtualSurfaceActor->GetVolume(), VirtualSurfaceActor->GetCoord());
-		VirtualSurfaceActor->Destroy();
-		ChildrenMap.erase(Surface);
-	}
-}
 
 bool AVirtualNavMeshArea::FindPlace(const FIntVector Volume, FIntVector &Coord)
 {
 	LazyInit();
 	UE_LOG(LogTemp, Warning, TEXT("VNMA Find place for: %s"), *Volume.ToString());
+	
 	for (int z = 0; z <= AreaBounds.Z - Volume.Z; z++)
 	{
 		for (int y = 0; y <= AreaBounds.Y - Volume.Y; y++)
@@ -180,6 +181,8 @@ bool AVirtualNavMeshArea::FindPlace(const FIntVector Volume, FIntVector &Coord)
 void AVirtualNavMeshArea::ReservePlace(const FIntVector Volume, FIntVector Coord)
 {
 	LazyInit();
+	
+	Coord2Volume[Coord] = Volume;
 	for (int z = 0; z < Volume.Z; z++)
 	{
 		for (int y = 0; y < Volume.Y; y++)
@@ -203,18 +206,19 @@ void AVirtualNavMeshArea::ReservePlace(const FIntVector Volume, FIntVector Coord
 	}
 }
 
-void AVirtualNavMeshArea::ReleasePlace(const FIntVector Volume, FIntVector Place)
+void AVirtualNavMeshArea::ReleasePlace(const FIntVector Volume, FIntVector Coord)
 {
 	LazyInit();
+	Coord2Volume.erase(Coord);
 	for (int z = 0; z < Volume.Z; z++)
 	{
 		for (int y = 0; y < Volume.Y; y++)
 		{
 			for (int x = 0; x < Volume.X; x++)
 			{
-				int dx = Place.X + x;
-				int dy = Place.Y + y;
-				int dz = Place.Z + z;
+				int dx = Coord.X + x;
+				int dy = Coord.Y + y;
+				int dz = Coord.Z + z;
 
 				if (Grid[dx][dy][dz])
 				{
@@ -232,4 +236,26 @@ void AVirtualNavMeshArea::ReleasePlace(const FIntVector Volume, FIntVector Place
 FVector AVirtualNavMeshArea::GetReservedLocation(const FIntVector Volume, FIntVector Coord)
 {
 	return GetActorLocation() + FVector(Coord - GridOffset) * CellSize + FVector(Volume) * CellSize / 2;
+}
+
+void AVirtualNavMeshArea::AddSurface(AActor *Surface, const FVirtualNavMesh& virtualNavMesh)
+{
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+	auto VirtualSurfaceActor = GetWorld()->SpawnActor<AVirtualSurfaceActor>(
+		AVirtualSurfaceActor::StaticClass(),
+		virtualNavMesh.Transform,
+		SpawnParams);
+
+	if (VirtualSurfaceActor != nullptr)
+	{
+		Coord2Actor[virtualNavMesh.Coord] = VirtualSurfaceActor;
+		VirtualSurfaceActor->Init(Surface);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("VNMA: Surface %s failed to spawn virtual actor"), *Surface->GetOwner()->GetName());
+		return;
+	}
 }

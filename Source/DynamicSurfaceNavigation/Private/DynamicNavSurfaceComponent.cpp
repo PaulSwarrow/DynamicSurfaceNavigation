@@ -2,13 +2,10 @@
 
 #include "DynamicNavSurfaceComponent.h"
 #include "NavMesh/RecastNavMesh.h"
-#include "VirtualSurfaceActor.h"
+#include "VirtualNavMeshArea.h"
 #include "NavigationSystem.h"
 #include "Kismet/GameplayStatics.h"
-#include <unordered_set>
 
-std::unordered_set<UDynamicNavSurfaceComponent *> UDynamicNavSurfaceComponent::RegisterQueue;
-std::unordered_set<UDynamicNavSurfaceComponent *> UDynamicNavSurfaceComponent::UnregisterQueue;
 
 // Sets default values for this component's properties
 UDynamicNavSurfaceComponent::UDynamicNavSurfaceComponent()
@@ -22,26 +19,25 @@ UDynamicNavSurfaceComponent::UDynamicNavSurfaceComponent()
 void UDynamicNavSurfaceComponent::BeginPlay()
 {
     Super::BeginPlay();
-    // TODO fined AVirtualNAvMeshArea instance
-    UnregisterQueue.erase(this);
-    RegisterQueue.insert(this);
+    //TODO find VirtualNavMeshArea actor in the level
+    AVirtualNavMeshArea* VirtualArea;
+    VirtualArea = Cast<AVirtualNavMeshArea>(UGameplayStatics::GetActorOfClass(GetWorld(), AVirtualNavMeshArea::StaticClass()));
+    VirtualArea->TryCreateVirtualNavMesh(GetOwner(), VirtualNavMeshData);
 }
 
 void UDynamicNavSurfaceComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-    UnregisterQueue.insert(this);
-    RegisterQueue.erase(this);
+    Super::EndPlay(EndPlayReason);
+    AVirtualNavMeshArea* VirtualArea = Cast<AVirtualNavMeshArea>(UGameplayStatics::GetActorOfClass(GetWorld(), AVirtualNavMeshArea::StaticClass()));
+    VirtualArea->ReleaseVirtualNavMesh(GetOwner(), VirtualNavMeshData.Coord);
+
 }
 
 FTransform UDynamicNavSurfaceComponent::TransformWorld2Virtual(FTransform WorldTransform, bool KeepUpDirection) const
 {
-    if (VirtualSurfaceActor == nullptr)
-    {
-        return WorldTransform;
-    }
     FTransform LocalTransform = WorldTransform.GetRelativeTransform(GetOwner()->GetActorTransform());
 
-    FTransform ResultTransform = LocalTransform * VirtualSurfaceActor->GetTransform();
+    FTransform ResultTransform = LocalTransform * VirtualNavMeshData.Transform;
     if (KeepUpDirection)
     {
         FRotator Rotation = ResultTransform.Rotator();
@@ -59,11 +55,7 @@ FTransform UDynamicNavSurfaceComponent::TransformWorld2Virtual(FTransform WorldT
 
 FTransform UDynamicNavSurfaceComponent::TransformVirtual2World(FTransform VirtualTransform, bool RestoreUpDirection) const
 {
-    if (VirtualSurfaceActor == nullptr)
-    {
-        return VirtualTransform;
-    }
-    FTransform LocalTransform = VirtualTransform.GetRelativeTransform(VirtualSurfaceActor->GetActorTransform());
+    FTransform LocalTransform = VirtualTransform.GetRelativeTransform(VirtualNavMeshData.Transform);
 
     FTransform ResultTransform = LocalTransform * GetOwner()->GetTransform();
     if (RestoreUpDirection)
@@ -82,28 +74,18 @@ FTransform UDynamicNavSurfaceComponent::TransformVirtual2World(FTransform Virtua
 
 FVector UDynamicNavSurfaceComponent::TransformDirectionWorld2Virtual(FVector WorldDirection) const
 {
-    if (VirtualSurfaceActor == nullptr)
-    {
-        return WorldDirection;
-    }
-    // auto localVector = GetOwner()->GetTransform().InverseTransformVector(WorldDirection);
-    // return VirtualSurfaceActor->GetTransform().TransformVector(localVector);
 
     FTransform T1 = GetOwner()->GetTransform();
     T1.SetScale3D(FVector::OneVector); // Ignore scaling
     auto localVector = T1.InverseTransformVector(WorldDirection);
-    FTransform T2 = VirtualSurfaceActor->GetTransform();
+    FTransform T2 = VirtualNavMeshData.Transform;
     T2.SetScale3D(FVector::OneVector); // Ignore scaling
     return T2.TransformVector(localVector);
 }
 
 FVector UDynamicNavSurfaceComponent::TransformDirectionVirtual2World(FVector VirtualDirection) const
 {
-    if (VirtualSurfaceActor == nullptr)
-    {
-        return VirtualDirection;
-    }
-    FTransform T1 = VirtualSurfaceActor->GetTransform();
+    FTransform T1 = VirtualNavMeshData.Transform;
     T1.SetScale3D(FVector::OneVector); // Ignore scaling
     auto localVector = T1.InverseTransformVector(VirtualDirection);
     FTransform T2 = GetOwner()->GetTransform();
@@ -113,12 +95,8 @@ FVector UDynamicNavSurfaceComponent::TransformDirectionVirtual2World(FVector Vir
 
 FVector UDynamicNavSurfaceComponent::TransformPositionWorld2Virtual(FVector WorldPosition) const
 {
-    if (VirtualSurfaceActor == nullptr)
-    {
-        return WorldPosition;
-    }
     auto localPosition = GetOwner()->GetTransform().InverseTransformPosition(WorldPosition);
-    return VirtualSurfaceActor->GetTransform().TransformPosition(localPosition);
+    return VirtualNavMeshData.Transform.TransformPosition(localPosition);
 }
 
 FVector UDynamicNavSurfaceComponent::GetVelocityAtPosition(FVector WorldPosition) const

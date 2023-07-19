@@ -23,10 +23,8 @@ protected:
 	virtual void BeginPlay() override;
 
 public:
-	void Init(AActor *realSurfaceActor, FIntVector Volume, FIntVector Coord);
+	void Init(AActor *realSurfaceActor);
 
-	FIntVector GetVolume() { return ActorVolume; };
-	FIntVector GetCoord() { return ActorCoord; };
 
 private:
 	void AddStaticMeshComponent(UStaticMeshComponent *StaticMeshComponent, FTransform ActorTransform);
@@ -34,6 +32,4 @@ private:
 	bool IsRootComponent(UStaticMeshComponent *StaticMeshComponent);
 
 	bool bInitialized;
-	FIntVector ActorVolume;
-	FIntVector ActorCoord;
 };

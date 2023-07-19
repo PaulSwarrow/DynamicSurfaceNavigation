@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "VirtualSurfaceActor.h"
-#include <unordered_set>
+#include "VirtualNavMeshArea.h"
 #include "DynamicNavSurfaceComponent.generated.h"
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
@@ -26,7 +26,8 @@ protected:
 
 
 public:
-	AVirtualSurfaceActor *VirtualSurfaceActor;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "DynamicSurfaceNavigation")
+	FVirtualNavMesh VirtualNavMeshData;
 
 	FTransform TransformWorld2Virtual(FTransform WorldTransform, bool KeepUpDirection) const;
 	FTransform TransformVirtual2World(FTransform VirtualTransform, bool RestoreUpDirection) const;
@@ -35,8 +36,5 @@ public:
 	FVector TransformDirectionVirtual2World(FVector VirtualDirection) const;
 
 	FVector GetVelocityAtPosition(FVector WorldPosition) const;
-	
-	static std::unordered_set<UDynamicNavSurfaceComponent*> RegisterQueue;
-	static std::unordered_set<UDynamicNavSurfaceComponent*> UnregisterQueue;
 
 };

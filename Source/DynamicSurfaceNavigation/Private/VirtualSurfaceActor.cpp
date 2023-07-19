@@ -24,12 +24,10 @@ AVirtualSurfaceActor::AVirtualSurfaceActor()
     RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("MyRootComponent"));
 }
 
-void AVirtualSurfaceActor::Init(AActor *realSurfaceActor, FIntVector Volume, FIntVector Coord)
+void AVirtualSurfaceActor::Init(AActor *realSurfaceActor)
 {
     FString ActorName = realSurfaceActor->GetName() + "_VirtualSurfaceActor";
     SetActorLabel(*ActorName);
-    this->ActorVolume = Volume;
-    this->ActorCoord = Coord;
     // Copy static meshes:
     TArray<UStaticMeshComponent *> StaticMeshComponents;
     realSurfaceActor->GetComponents(StaticMeshComponents);

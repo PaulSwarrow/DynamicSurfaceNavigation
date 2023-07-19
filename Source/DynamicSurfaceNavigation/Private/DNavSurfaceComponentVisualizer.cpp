@@ -11,7 +11,7 @@
 void DNavSurfaceComponentVisualizer::DrawVisualization(const UActorComponent *Component, const FSceneView *View, FPrimitiveDrawInterface *PDI)
 {
     const UDynamicNavSurfaceComponent *Surface = Cast<UDynamicNavSurfaceComponent>(Component);
-    const AVirtualSurfaceActor *VirtualSurface = Surface->VirtualSurfaceActor;
+    /*const AVirtualSurfaceActor *VirtualSurface = Surface->VirtualSurfaceActor;
 
     auto navsys = Surface->GetWorld()->GetNavigationSystem();
     if (navsys == nullptr || VirtualSurface == nullptr)
@@ -45,7 +45,6 @@ void DNavSurfaceComponentVisualizer::DrawVisualization(const UActorComponent *Co
 
         for (int c = 0; c < RecastDebugGeometry.Clusters.Num(); c++)
         {
-            /* code */
 
             for (int32 i = 0; i < RecastDebugGeometry.Clusters[c].MeshIndices.Num() - 3; i += 3)
             {
@@ -64,12 +63,15 @@ void DNavSurfaceComponentVisualizer::DrawVisualization(const UActorComponent *Co
                 PDI->DrawLine(Vertex2, Vertex0, Color, SDPG_World);
             }
         }
-    }
+    }*/
 }
 
 FVector DNavSurfaceComponentVisualizer::Virtual2WorldPosition(FVector position, const UDynamicNavSurfaceComponent *surface)
 {
+    return FVector::ZeroVector;
+    /*
     auto local = surface->VirtualSurfaceActor->GetTransform().InverseTransformPosition(position);
     auto world = surface->GetOwner()->GetTransform().TransformPosition(local);
     return world;
+    */
 }
