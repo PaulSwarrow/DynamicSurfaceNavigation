@@ -23,7 +23,7 @@ protected:
 	virtual void BeginPlay() override;
 
 public:
-	void Init(AActor *realSurfaceActor);
+	void Init(AActor *originalActor);
 
 
 private:

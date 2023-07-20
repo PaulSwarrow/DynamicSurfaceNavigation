@@ -24,14 +24,14 @@ AVirtualSurfaceActor::AVirtualSurfaceActor()
     RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("MyRootComponent"));
 }
 
-void AVirtualSurfaceActor::Init(AActor *realSurfaceActor)
+void AVirtualSurfaceActor::Init(AActor *originalActor)
 {
-    FString ActorName = realSurfaceActor->GetName() + "_VirtualSurfaceActor";
+    FString ActorName = originalActor->GetName() + "_VirtualSurfaceActor";
     SetActorLabel(*ActorName);
     // Copy static meshes:
     TArray<UStaticMeshComponent *> StaticMeshComponents;
-    realSurfaceActor->GetComponents(StaticMeshComponents);
-    FTransform ActorTransform = realSurfaceActor->GetActorTransform();
+    originalActor->GetComponents(StaticMeshComponents);
+    FTransform ActorTransform = originalActor->GetActorTransform();
     for (UStaticMeshComponent *StaticMeshComponent : StaticMeshComponents)
     {
         AddStaticMeshComponent(StaticMeshComponent, ActorTransform);
