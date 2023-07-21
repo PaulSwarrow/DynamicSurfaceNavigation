@@ -7,7 +7,7 @@
 #include "Components/ChildActorComponent.h"
 #include "Components/BrushComponent.h"
 #include "NavMesh/NavMeshBoundsVolume.h"
-#include "VirtualSurfaceActor.h"
+#include "DSN_ActorProjection.h"
 #include <vector>
 #include <unordered_map>
 #include "VirtualNavMeshArea.generated.h"

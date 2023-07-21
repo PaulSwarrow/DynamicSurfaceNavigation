@@ -3,7 +3,7 @@
 #include "DNavSurfaceComponentVisualizer.h"
 #include "DynamicNavSurfaceComponent.h"
 #include "NavMesh/RecastNavMesh.h"
-#include "VirtualSurfaceActor.h"
+
 #include "NavigationSystem.h"
 #include "CoreMinimal.h"
 #include "LocalVertexFactory.h"

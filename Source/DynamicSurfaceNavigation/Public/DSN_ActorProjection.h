@@ -6,17 +6,17 @@
 #include "GameFramework/Actor.h"
 #include "Math/Vector.h"
 #include <Vector>
-#include "VirtualSurfaceActor.generated.h"
+#include "DSN_ActorProjection.generated.h"
 
 UCLASS()
-class DYNAMICSURFACENAVIGATION_API AVirtualSurfaceActor : public AActor
+class DYNAMICSURFACENAVIGATION_API ADSN_ActorProjection : public AActor
 {
 	GENERATED_BODY()
 
 
 public:
 	// Sets default values for this actor's properties
-	AVirtualSurfaceActor();
+	ADSN_ActorProjection();
 
 protected:
 	// Called when the game starts or when spawned

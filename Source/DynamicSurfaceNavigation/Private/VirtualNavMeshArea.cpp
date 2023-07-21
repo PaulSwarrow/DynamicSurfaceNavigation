@@ -233,8 +233,8 @@ void AVirtualNavMeshArea::AddSurface(AActor *Surface, const FVirtualNavMesh &vir
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-	auto VirtualSurfaceActor = GetWorld()->SpawnActor<AVirtualSurfaceActor>(
-		AVirtualSurfaceActor::StaticClass(),
+	auto VirtualSurfaceActor = GetWorld()->SpawnActor<ADSN_ActorProjection>(
+		ADSN_ActorProjection::StaticClass(),
 		virtualNavMesh.Transform,
 		SpawnParams);
 

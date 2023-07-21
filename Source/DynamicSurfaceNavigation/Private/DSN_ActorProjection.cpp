@@ -1,6 +1,6 @@
 // Copyright Pagan Games. All rights reserved.
 
-#include "VirtualSurfaceActor.h"
+#include "DSN_ActorProjection.h"
 #include "Kismet/GameplayStatics.h"
 #include "NavigationSystem.h"
 #include "NavMesh/NavMeshBoundsVolume.h"
@@ -16,7 +16,7 @@
 #include <stdexcept>
 
 // Sets default values
-AVirtualSurfaceActor::AVirtualSurfaceActor()
+ADSN_ActorProjection::ADSN_ActorProjection()
 {
     // Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
     PrimaryActorTick.bCanEverTick = true;
@@ -24,7 +24,7 @@ AVirtualSurfaceActor::AVirtualSurfaceActor()
     RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("MyRootComponent"));
 }
 
-void AVirtualSurfaceActor::Init(AActor *originalActor)
+void ADSN_ActorProjection::Init(AActor *originalActor)
 {
     FString ActorName = originalActor->GetName() + "_VirtualSurfaceActor";
     SetActorLabel(*ActorName);
@@ -39,12 +39,12 @@ void AVirtualSurfaceActor::Init(AActor *originalActor)
 }
 
 // Called when the game starts or when spawned
-void AVirtualSurfaceActor::BeginPlay()
+void ADSN_ActorProjection::BeginPlay()
 {
     Super::BeginPlay();
 }
 
-void AVirtualSurfaceActor::AddStaticMeshComponent(UStaticMeshComponent *StaticMeshComponent, FTransform ActorTransform)
+void ADSN_ActorProjection::AddStaticMeshComponent(UStaticMeshComponent *StaticMeshComponent, FTransform ActorTransform)
 {
     UStaticMeshComponent *NewMeshComponent = NewObject<UStaticMeshComponent>(this);
     NewMeshComponent->RegisterComponent();
@@ -66,7 +66,7 @@ void AVirtualSurfaceActor::AddStaticMeshComponent(UStaticMeshComponent *StaticMe
     NewMeshComponent->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);
 }
 
-bool AVirtualSurfaceActor::IsRootComponent(UStaticMeshComponent *StaticMeshComponent)
+bool ADSN_ActorProjection::IsRootComponent(UStaticMeshComponent *StaticMeshComponent)
 {
     return StaticMeshComponent->IsRegistered() && StaticMeshComponent->GetAttachParent() == nullptr;
 }

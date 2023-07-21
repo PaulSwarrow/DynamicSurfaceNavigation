@@ -66,8 +66,8 @@ void UDSN_ActorProjector::HandleComponentBeginOverlap(UPrimitiveComponent *Overl
 
 			auto VirtualTransform = Surface->TransformWorld2Virtual(GetOwner()->GetTransform(), false);
 
-			auto Projection = GetWorld()->SpawnActor<AVirtualSurfaceActor>(
-				AVirtualSurfaceActor::StaticClass(),
+			auto Projection = GetWorld()->SpawnActor<ADSN_ActorProjection>(
+				ADSN_ActorProjection::StaticClass(),
 				VirtualTransform,
 				SpawnParams);
 			Projection->Init(GetOwner());
