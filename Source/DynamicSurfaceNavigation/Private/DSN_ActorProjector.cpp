@@ -19,10 +19,18 @@ UDSN_ActorProjector::UDSN_ActorProjector()
 void UDSN_ActorProjector::BeginPlay()
 {
 	Super::BeginPlay();
+	
 	OnComponentBeginOverlap.AddDynamic(this, &UDSN_ActorProjector::HandleComponentBeginOverlap);
 	OnComponentEndOverlap.AddDynamic(this, &UDSN_ActorProjector::HandleComponentEndOverlap);
 
+	//get all overlapped actors and pass them to HandleComponentBeginOverlap
 	// ...
+	
+	TSet<AActor*> OverlappedActors;
+	GetOverlappingActors(OverlappedActors);
+	for(const auto &element : OverlappedActors){
+		HandleComponentBeginOverlap(nullptr, element, nullptr, 0, false, FHitResult());
+	}
 }
 
 void UDSN_ActorProjector::EndPlay(const EEndPlayReason::Type EndPlayReason)
