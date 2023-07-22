@@ -47,7 +47,6 @@ void UDSN_ActorProjector::TickComponent(float DeltaTime, ELevelTick TickType, FA
 	{
 		SyncProjectionPosition(element.first, element.second);
 	}
-	// ...
 }
 
 void UDSN_ActorProjector::HandleComponentBeginOverlap(UPrimitiveComponent *OverlappedComponent, AActor *OtherActor, UPrimitiveComponent *OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult &SweepResult)
@@ -105,7 +104,8 @@ void UDSN_ActorProjector::SyncProjectionPosition(UDynamicNavSurfaceComponent *Su
 	auto CurrentTransform = Projection->GetTransform();
 	float AngularDelta = FMath::RadiansToDegrees(CurrentTransform.GetRotation().AngularDistance(VirtualTransform.GetRotation()));
 	float LinearDelta = FVector::Distance(CurrentTransform.GetLocation(), VirtualTransform.GetLocation());
-	if(AngularDelta > AgulatMinStep || LinearDelta > LinearMinStep)
+	float ScaleDelta = FVector::Distance(CurrentTransform.GetScale3D(), VirtualTransform.GetScale3D());
+	if(AngularDelta > AgulatMinStep || LinearDelta > LinearMinStep || ScaleDelta > ScaleMinStep)
 	{
 		Projection->SetActorTransform(VirtualTransform);
 	}

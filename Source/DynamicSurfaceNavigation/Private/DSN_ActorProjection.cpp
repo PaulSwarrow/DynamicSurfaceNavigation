@@ -12,6 +12,7 @@
 #include "Engine/World.h"
 #include "AI/NavigationSystemBase.h"
 #include "NavMesh/RecastNavMesh.h"
+#include "NavModifierComponent.h"
 #include "AI/Navigation/NavigationTypes.h"
 #include <stdexcept>
 
@@ -36,6 +37,7 @@ void ADSN_ActorProjection::Init(AActor *originalActor)
     {
         AddStaticMeshComponent(StaticMeshComponent, ActorTransform);
     }
+
 }
 
 // Called when the game starts or when spawned
