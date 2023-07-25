@@ -27,7 +27,7 @@ ADSN_ActorProjection::ADSN_ActorProjection()
 
 void ADSN_ActorProjection::Init(AActor *originalActor)
 {
-    FString ActorName = originalActor->GetName() + "_VirtualSurfaceActor";
+    FString ActorName = "DSN_Projection_" + originalActor->GetName();
     SetActorLabel(*ActorName);
     // Copy static meshes:
     TArray<UStaticMeshComponent *> StaticMeshComponents;
