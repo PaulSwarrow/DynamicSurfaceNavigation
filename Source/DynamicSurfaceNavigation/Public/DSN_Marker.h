@@ -18,6 +18,9 @@ public:
 	ADSN_Marker();
 
 protected:
+	// The root sphere component
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+    class USphereComponent* RootSphereComponent;
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
@@ -26,8 +29,13 @@ protected:
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
-	void Initialize(AActor* Target, float Radius);
+	void InitializeMarker();
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ExposeOnSpawn = "true"))
+	AActor* SyncTarget;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ExposeOnSpawn = "true"))
+	float ProjectionRadius;
 
 private:
 	USphereComponent* TargetCollider;
