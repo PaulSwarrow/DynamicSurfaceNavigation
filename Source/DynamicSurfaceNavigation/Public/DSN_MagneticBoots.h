@@ -9,7 +9,11 @@
 #include "DynamicNavSurfaceComponent.h"
 #include "DSN_Ghost.h"
 #include "AIController.h"
+#include "Navigation/PathFollowingComponent.h"
+#include "AITypes.h"
 #include "DSN_MagneticBoots.generated.h"
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnMovementComplete);
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class DYNAMICSURFACENAVIGATION_API UDSN_MagneticBoots : public UActorComponent
@@ -29,23 +33,35 @@ public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction *ThisTickFunction) override;
 
-	UFUNCTION(BlueprintCallable, Category = "DynamicSurfaceNavigation")
-	void MoveTo(const FVector &Destination);
-
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "DynamicSurfaceNavigation", meta = (Tooltip = "Offset for the lowest point of the actor. If Actor's pivot is at the floor - keep it zero."))
 	FVector FeetOffset;
-
-	// UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Custom")
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "DynamicSurfaceNavigation")
 	UDynamicNavSurfaceComponent *CurrentSurface;
+	
+    UPROPERTY(BlueprintAssignable, Category = "DynamicSurfaceNavigation")
+    FOnMovementComplete OnMovementCompleteEvent;
+
+	
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "DynamicSurfaceNavigation")
+	AAIController* GetGhostController() { return GhostController; }
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "DynamicSurfaceNavigation")
+	ACharacter* GetGhost() { return Ghost; }
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "DynamicSurfaceNavigation")
+	bool HasDynamicSurface() { return DynamicSurfaceRegistered; }
 
 private:
+	bool DynamicSurfaceRegistered;
+
 	ACharacter *CurrentCharacter;
 
 	UCharacterMovementComponent *MovementComponent;
 
 	ACharacter *Ghost;
 
-	AAIController *CurrentController;
+	AAIController *GhostController;
 
 	void OnReceiveSurface(UDynamicNavSurfaceComponent *Surface);
 
@@ -54,4 +70,5 @@ private:
 	FVector GetFeetPosition();
 
 	void SetFeetPosition(FVector Position);
+	
 };

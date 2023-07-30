@@ -44,6 +44,11 @@ void ADSN_Marker::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	SyncPosition();
+	
+#if WITH_EDITOR	
+	UKismetSystemLibrary::DrawDebugSphere(GetWorld(), GetActorLocation(), 50, 12, FColor::Red, 0.1f, 3.f);
+#endif	
+
 }
 
 void ADSN_Marker::InitializeMarker()
@@ -56,8 +61,7 @@ void ADSN_Marker::InitializeMarker()
 	TargetCollider->InitSphereRadius(ProjectionRadius);
 
 	//TODO draw debug sphere matching TargetCollider radius and position
-	//UKismetSystemLibrary::DrawDebugSphere(GetWorld(), TargetCollider->GetComponentLocation(), TargetCollider->GetScaledSphereRadius(), 12, FColor::Red, 0.5f, 1.f);
-
+	
 	//TSet<AActor *> OverlappedActors;
 	//TargetCollider->GetOverlappingActors(OverlappedActors, null);
 	TArray<AActor *> OverlappedActors;

@@ -2,6 +2,7 @@
 
 #include "DSN_Ghost.h"
 #include "GameFramework/Character.h"
+#include "Kismet/KismetSystemLibrary.h"
 #include "Components/CapsuleComponent.h"
 
 // Sets default values
@@ -26,6 +27,11 @@ void ADSN_Ghost::BeginPlay()
 void ADSN_Ghost::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+#if WITH_EDITOR		
+	auto capsule = GetCapsuleComponent();
+	UKismetSystemLibrary::DrawDebugCapsule(GetWorld(), capsule->GetComponentLocation(), capsule->GetScaledCapsuleHalfHeight(), capsule->GetScaledCapsuleRadius(), capsule->GetComponentRotation(), FColor::Blue, 0.1f, 6.f);
+#endif
 }
 
 // Called to bind functionality to input
