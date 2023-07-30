@@ -33,8 +33,13 @@ public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction *ThisTickFunction) override;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "DynamicSurfaceNavigation", meta = (Tooltip = "Offset for the lowest point of the actor. If Actor's pivot is at the floor - keep it zero."))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Position Syncronization", meta = (Tooltip = "Offset for the lowest point of the actor. If Actor's pivot is at the floor - keep it zero."))
 	FVector FeetOffset;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Position Syncronization", meta = (Tooltip = "Sweep"))
+	bool Sweep;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Position Syncronization", meta = (Tooltip = "Teleport Type"))
+	ETeleportType TeleportType;
+	
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "DynamicSurfaceNavigation")
 	UDynamicNavSurfaceComponent *CurrentSurface;

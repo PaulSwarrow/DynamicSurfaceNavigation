@@ -68,10 +68,12 @@ void UDSN_MagneticBoots::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 		GhostTransform.SetScale3D(FVector::OneVector);
 		//Transform Virtual to World and restore Upwards direction:
 		FTransform DesiredTransform = Surface->TransformVirtual2World(GhostTransform, true);
+		
+		DesiredTransform.SetLocation(DesiredTransform.GetLocation() - GetOwner()->GetActorTransform().TransformVector(FeetOffset));
 		//Apply Transform (with feet level adjustement):
-		SetFeetPosition(DesiredTransform.GetLocation()
-		); //feet position correction (if pivot is in the center o the actor)
-		GetOwner()->SetActorRotation(DesiredTransform.GetRotation());
+		//SetFeetPosition(DesiredTransform.GetLocation()); //feet position correction (if pivot is in the center o the actor)
+		//GetOwner()->SetActorRotation(DesiredTransform.GetRotation());
+		GetOwner()->SetActorTransform(DesiredTransform, Sweep, nullptr, TeleportType);
 		//No scaling required
 
 		
