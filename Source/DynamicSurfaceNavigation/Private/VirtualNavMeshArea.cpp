@@ -7,6 +7,7 @@
 #include <vector>
 #include <unordered_map>
 #include "NavMesh/RecastNavMesh.h"
+#include "NavigationInvokerComponent.h"
 
 // Sets default values
 AVirtualNavMeshArea::AVirtualNavMeshArea()
@@ -75,7 +76,7 @@ bool AVirtualNavMeshArea::TryCreateVirtualNavMesh(AActor *realSurfaceActor, FVir
 	FIntVector Coord;
 	if (FindPlace(Volume, Coord))
 	{
-		FTransform VirtualTransform(GetReservedLocation(Volume, Coord));
+		FTransform VirtualTransform(FRotator::ZeroRotator, GetReservedLocation(Volume, Coord),realSurfaceActor->GetActorScale3D());
 		// reservation data:
 		VirtualNavMesh.Coord = Coord;
 		VirtualNavMesh.Transform = VirtualTransform;
@@ -119,7 +120,7 @@ void AVirtualNavMeshArea::ReleaseVirtualNavMesh(AActor *realSurfaceActor, FIntVe
 FIntVector AVirtualNavMeshArea::GetNavBounds(const FVector Volume)
 {
 	LazyInit();
-	auto ExtenedVolume = Volume + FVector(CellSize/2, CellSize/2, CellSize/2);
+	auto ExtenedVolume = Volume + FVector(CellSize / 2, CellSize / 2, CellSize / 2);
 	return FIntVector(ceilf(ExtenedVolume.X / CellSize), ceilf(ExtenedVolume.Y / CellSize), ceilf(ExtenedVolume.Z / CellSize));
 }
 
@@ -242,6 +243,17 @@ void AVirtualNavMeshArea::AddSurface(AActor *Surface, const FVirtualNavMesh &vir
 	{
 		Coord2Actor[virtualNavMesh.Coord] = VirtualSurfaceActor;
 		VirtualSurfaceActor->Init(Surface);
+		if (AllwaysGenerateNavMesh)
+		{
+			// TODO create and add NavigationInvoker component
+			UNavigationInvokerComponent *navInvoker = NewObject<UNavigationInvokerComponent>(VirtualSurfaceActor);
+
+			FVector Center;
+			FVector Bounds;
+			VirtualSurfaceActor->GetActorBounds(true, Center, Bounds, true);
+			navInvoker->SetGenerationRadii(Bounds.GetMax(), Bounds.GetMax() + 1000);
+			navInvoker->RegisterComponent();
+		}
 	}
 	else
 	{

@@ -50,6 +50,9 @@ public:
 	// Sets default values for this actor's properties
 	AVirtualNavMeshArea();
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "DynamicSurfaceNavigation")
+	bool AllwaysGenerateNavMesh = true;
+
 	FIntVector AreaBounds;
 	std::vector<std::vector<std::vector<bool>>> Grid;
 

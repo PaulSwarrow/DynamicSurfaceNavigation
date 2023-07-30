@@ -51,7 +51,7 @@ void ADSN_ActorProjection::AddStaticMeshComponent(UStaticMeshComponent *StaticMe
     UStaticMeshComponent *NewMeshComponent = NewObject<UStaticMeshComponent>(this);
     NewMeshComponent->RegisterComponent();
     NewMeshComponent->SetStaticMesh(StaticMeshComponent->GetStaticMesh());
-    NewMeshComponent->AttachToComponent(RootComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+    NewMeshComponent->AttachToComponent(RootComponent, FAttachmentTransformRules::SnapToTargetIncludingScale);
 
     // set relative transform if is not root
     if (!IsRootComponent(StaticMeshComponent))
@@ -60,7 +60,7 @@ void ADSN_ActorProjection::AddStaticMeshComponent(UStaticMeshComponent *StaticMe
         auto RelativeTransform = ComponentTransform.GetRelativeTransform(ActorTransform);
 
         NewMeshComponent->SetRelativeTransform(RelativeTransform);
-    }
+    } 
 
     // set up collision
     NewMeshComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);

@@ -52,6 +52,7 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "DynamicSurfaceNavigation")
 	bool HasDynamicSurface() { return DynamicSurfaceRegistered; }
 
+
 private:
 	bool DynamicSurfaceRegistered;
 
