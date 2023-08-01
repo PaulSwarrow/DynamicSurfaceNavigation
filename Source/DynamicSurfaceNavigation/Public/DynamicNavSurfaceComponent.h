@@ -32,6 +32,7 @@ public:
 	FTransform TransformVirtual2World(FTransform VirtualTransform, bool RestoreUpDirection) const;
 	FVector TransformPositionWorld2Virtual(FVector WorldPosition) const;
 	FVector TransformDirectionWorld2Virtual(FVector WorldDirection) const;
+	FVector TransformPositionVirtual2World(FVector VirtualPosition) const;
 	FVector TransformDirectionVirtual2World(FVector VirtualDirection) const;
 
 	FVector GetVelocityAtPosition(FVector WorldPosition) const;

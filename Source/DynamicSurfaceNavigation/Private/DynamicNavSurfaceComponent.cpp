@@ -83,6 +83,16 @@ FVector UDynamicNavSurfaceComponent::TransformDirectionWorld2Virtual(FVector Wor
     return T2.TransformVector(localVector);
 }
 
+FVector UDynamicNavSurfaceComponent::TransformPositionVirtual2World(FVector VirtualPosition) const
+{
+    FTransform T1 = VirtualNavMeshData.Transform;
+    T1.SetScale3D(FVector::OneVector); // Ignore scaling
+    auto localPosition = T1.InverseTransformPosition(VirtualPosition);
+    FTransform T2 = GetOwner()->GetTransform();
+    T2.SetScale3D(FVector::OneVector); // Ignore scaling
+    return T2.TransformPosition(localPosition);
+}
+
 FVector UDynamicNavSurfaceComponent::TransformDirectionVirtual2World(FVector VirtualDirection) const
 {
     FTransform T1 = VirtualNavMeshData.Transform;
