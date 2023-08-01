@@ -44,6 +44,9 @@ class DYNAMICSURFACENAVIGATION_API UDSN_FunctionLibrary : public UBlueprintFunct
 
 public:
 
+	UFUNCTION(BlueprintCallable, Category = "DynamicSurfaceNavigation")
+	static void DSN_StopMovement(APawn* Pawn);
+
 	UFUNCTION(BlueprintCallable, Category = "DynamicSurfaceNavigation", meta=( WorldContext = "WorldContextObject" ))
 	static bool DSN_FindPointInNavMesh(UObject* WorldContextObject, FVector origin, float radius, bool reachable, FDSN_Point &point);
 

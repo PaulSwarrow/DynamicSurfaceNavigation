@@ -15,9 +15,9 @@ FDSN_Point UDSN_FunctionLibrary::DSN_ParseLocation(UObject *WorldContextObject, 
     FDSN_Point point;
     point.Location = origin;
 
-    const float ActorHalfHeight = 100.f; //slightly greater than real character bounds
-    const float ActorR = 40.f;//slightly greater than real character bounds
-    UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::LogAndReturnNull);
+    const float ActorHalfHeight = 100.f; // slightly greater than real character bounds
+    const float ActorR = 40.f;           // slightly greater than real character bounds
+    UWorld *World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::LogAndReturnNull);
     if (World)
     {
         TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes;
@@ -25,7 +25,7 @@ FDSN_Point UDSN_FunctionLibrary::DSN_ParseLocation(UObject *WorldContextObject, 
         ObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECC_PhysicsBody));
         ObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECC_Destructible));
 
-        TArray<AActor*> IgnoreActors;
+        TArray<AActor *> IgnoreActors;
         TArray<FHitResult> HitResults;
         FCollisionQueryParams QueryParams;
         QueryParams.AddIgnoredActors(IgnoreActors);
@@ -33,9 +33,9 @@ FDSN_Point UDSN_FunctionLibrary::DSN_ParseLocation(UObject *WorldContextObject, 
         FVector Target = FVector(origin.X, origin.Y, origin.Z - ActorHalfHeight);
         if (World->SweepMultiByObjectType(HitResults, origin, Target, FQuat::Identity, FCollisionObjectQueryParams(ObjectTypes), FCollisionShape::MakeSphere(ActorR), QueryParams))
         {
-            for (const FHitResult& HitResult : HitResults)
+            for (const FHitResult &HitResult : HitResults)
             {
-                AActor* HitActor = HitResult.GetActor();
+                AActor *HitActor = HitResult.GetActor();
                 if (HitActor)
                 {
                     auto Surface = HitActor->FindComponentByClass<UDynamicNavSurfaceComponent>();
@@ -65,7 +65,7 @@ bool UDSN_FunctionLibrary::DSN_FindPointInNavMesh(UObject *WorldContextObject, F
             point.Surface = dsn_origin.Surface;
 
             FNavLocation result;
-	        UKismetSystemLibrary::DrawDebugSphere(WorldContextObject, dsn_origin.GetNavLocation(), radius, 12, dsn_origin.IsVirtual()? FColor::Blue: FColor::Green, 0.1f, 3.f);
+            UKismetSystemLibrary::DrawDebugSphere(WorldContextObject, dsn_origin.GetNavLocation(), radius, 12, dsn_origin.IsVirtual() ? FColor::Blue : FColor::Green, 0.1f, 3.f);
             if (reachable)
             {
                 if (NavSystem->GetRandomReachablePointInRadius(dsn_origin.GetNavLocation(), radius, result))
@@ -85,6 +85,19 @@ bool UDSN_FunctionLibrary::DSN_FindPointInNavMesh(UObject *WorldContextObject, F
         }
     }
     return false;
+}
+
+void UDSN_FunctionLibrary::DSN_StopMovement(APawn *Pawn)
+{
+    auto Boots = Pawn->GetComponentByClass<UDSN_MagneticBoots>();
+    if (Boots != nullptr && Boots->HasDynamicSurface())
+    {
+        Boots->GetGhostController()->StopMovement();
+    }
+    else
+    {
+        Cast<AAIController>(Pawn->GetController())->StopMovement();
+    }
 }
 
 void UDSN_FunctionLibrary::CreateNavigationTaskData(APawn *Pawn, const FVector GoalLocation, AActor *GoalActor, bool ConvertLocation, APawn *&PawnToUse, FVector &TargetLocation, AActor *&TargetActor)
@@ -111,7 +124,7 @@ void UDSN_FunctionLibrary::CreateNavigationTaskData(APawn *Pawn, const FVector G
     {
         TargetActor = nullptr;
         TargetLocation = GoalLocation;
-        TargetLocation = ConvertLocation? DSN_ParseLocation(Pawn, GoalLocation).GetNavLocation() : GoalLocation;
+        TargetLocation = ConvertLocation ? DSN_ParseLocation(Pawn, GoalLocation).GetNavLocation() : GoalLocation;
     }
 
     // select pawn or ghost pawn
@@ -122,5 +135,3 @@ void UDSN_FunctionLibrary::CreateNavigationTaskData(APawn *Pawn, const FVector G
         PawnToUse = Boots->GetGhost();
     }
 }
-
-
