@@ -6,7 +6,6 @@
 #include "NavigationSystem.h"
 #include "Kismet/GameplayStatics.h"
 
-
 // Sets default values for this component's properties
 UDynamicNavSurfaceComponent::UDynamicNavSurfaceComponent()
 {
@@ -19,8 +18,7 @@ UDynamicNavSurfaceComponent::UDynamicNavSurfaceComponent()
 void UDynamicNavSurfaceComponent::BeginPlay()
 {
     Super::BeginPlay();
-    //TODO find VirtualNavMeshArea actor in the level
-    AVirtualNavMeshArea* VirtualArea;
+    // TODO find VirtualNavMeshArea actor in the level
     VirtualArea = Cast<AVirtualNavMeshArea>(UGameplayStatics::GetActorOfClass(GetWorld(), AVirtualNavMeshArea::StaticClass()));
     VirtualArea->TryCreateVirtualNavMesh(GetOwner(), VirtualNavMeshData);
 }
@@ -28,9 +26,10 @@ void UDynamicNavSurfaceComponent::BeginPlay()
 void UDynamicNavSurfaceComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
     Super::EndPlay(EndPlayReason);
-    AVirtualNavMeshArea* VirtualArea = Cast<AVirtualNavMeshArea>(UGameplayStatics::GetActorOfClass(GetWorld(), AVirtualNavMeshArea::StaticClass()));
-    VirtualArea->ReleaseVirtualNavMesh(GetOwner(), VirtualNavMeshData.Coord);
-
+    if (VirtualArea != nullptr)
+    {
+        VirtualArea->ReleaseVirtualNavMesh(GetOwner(), VirtualNavMeshData.Coord);
+    }
 }
 
 FTransform UDynamicNavSurfaceComponent::TransformWorld2Virtual(FTransform WorldTransform, bool KeepUpDirection) const

@@ -41,9 +41,16 @@ void AVirtualNavMeshArea::LazyInit()
 		GEngineIni);
 	CellSize = TileSize;
 
-	auto Bounds = GetBounds().BoxExtent; // box extent is half the size
-	GridOffset = FIntVector(floorf(Bounds.X / CellSize), floorf(Bounds.Y / CellSize), floorf(Bounds.Z / CellSize));
-	AreaBounds = GridOffset * 2;
+	auto Bounds = GetBounds();
+	auto HalfSize = Bounds.BoxExtent; // box extent is half the size
+	auto Min = GetActorLocation() - HalfSize;
+	auto Max = GetActorLocation() + HalfSize;
+	auto MinInt = FIntVector(ceilf(Min.Y/CellSize), ceilf(Min.Y/CellSize), ceilf(Min.Z/CellSize));
+	auto MaxInt = FIntVector(floorf(Max.Y/CellSize), floorf(Max.Y/CellSize), floorf(Max.Z/CellSize));
+
+	AreaBounds = MaxInt - MinInt;
+	GridOffset = MinInt;
+
 	Grid.resize(AreaBounds.X, std::vector<std::vector<bool>>(AreaBounds.Y, std::vector<bool>(AreaBounds.Z, false)));
 	UE_LOG(LogTemp, Warning, TEXT("VNMA Init: Tile: %f, Bounds: %s"), TileSize, *AreaBounds.ToString());
 	Initialized = true;
@@ -57,6 +64,16 @@ void AVirtualNavMeshArea::Tick(float DeltaTime)
 
 	PendingAddings.clear();
 }
+
+FIntVector AVirtualNavMeshArea::GetVolume(FIntVector ActorCoord)
+{
+	if (Coord2Volume.find(ActorCoord) != Coord2Volume.end())
+	{
+		return Coord2Volume[ActorCoord];
+	}
+    return FIntVector::ZeroValue;
+}
+
 
 bool AVirtualNavMeshArea::TryCreateVirtualNavMesh(AActor *realSurfaceActor, FVirtualNavMesh &VirtualNavMesh)
 {
@@ -226,7 +243,7 @@ void AVirtualNavMeshArea::ReleasePlace(const FIntVector Volume, FIntVector Coord
 
 FVector AVirtualNavMeshArea::GetReservedLocation(const FIntVector Volume, FIntVector Coord)
 {
-	return GetActorLocation() + FVector(Coord - GridOffset) * CellSize + FVector(Volume) * CellSize / 2;
+	return FVector(Coord + GridOffset) * CellSize + FVector(Volume) * CellSize / 2;
 }
 
 void AVirtualNavMeshArea::AddSurface(AActor *Surface, const FVirtualNavMesh &virtualNavMesh)

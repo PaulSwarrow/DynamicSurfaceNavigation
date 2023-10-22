@@ -23,7 +23,7 @@ protected:
 
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
-
+    AVirtualNavMeshArea* VirtualArea;
 public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "DynamicSurfaceNavigation")
 	FVirtualNavMesh VirtualNavMeshData;
@@ -36,5 +36,7 @@ public:
 	FVector TransformDirectionVirtual2World(FVector VirtualDirection) const;
 
 	FVector GetVelocityAtPosition(FVector WorldPosition) const;
+
+	AVirtualNavMeshArea* GetVirtualArea() const {return VirtualArea;}
 
 };

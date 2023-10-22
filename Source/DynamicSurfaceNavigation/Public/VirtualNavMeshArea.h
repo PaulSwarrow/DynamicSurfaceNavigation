@@ -63,6 +63,10 @@ public:
 
 	virtual void Tick(float DeltaTime) override;
 
+	FIntVector GetVolume(FIntVector ActorCoord);
+
+	FIntVector GetOrigin() { return GridOffset; }
+
 protected:
 	virtual void BeginPlay() override;
 

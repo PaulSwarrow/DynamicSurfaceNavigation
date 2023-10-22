@@ -65,7 +65,7 @@ bool UDSN_FunctionLibrary::DSN_FindPointInNavMesh(UObject *WorldContextObject, F
             point.Surface = dsn_origin.Surface;
 
             FNavLocation result;
-            UKismetSystemLibrary::DrawDebugSphere(WorldContextObject, dsn_origin.GetNavLocation(), radius, 12, dsn_origin.IsVirtual() ? FColor::Blue : FColor::Green, 0.1f, 3.f);
+            //UKismetSystemLibrary::DrawDebugSphere(WorldContextObject, dsn_origin.GetNavLocation(), radius, 12, dsn_origin.IsVirtual() ? FColor::Blue : FColor::Green, 0.1f, 3.f);
             if (reachable)
             {
                 if (NavSystem->GetRandomReachablePointInRadius(dsn_origin.GetNavLocation(), radius, result))

@@ -10,28 +10,36 @@
 
 void DNavSurfaceComponentVisualizer::DrawVisualization(const UActorComponent *Component, const FSceneView *View, FPrimitiveDrawInterface *PDI)
 {
-    const UDynamicNavSurfaceComponent *Surface = Cast<UDynamicNavSurfaceComponent>(Component);
-    /*const AVirtualSurfaceActor *VirtualSurface = Surface->VirtualSurfaceActor;
-
+    /*const UDynamicNavSurfaceComponent* Surface = Cast<UDynamicNavSurfaceComponent>(Component);
+    auto Area = Surface->GetVirtualArea();
     auto navsys = Surface->GetWorld()->GetNavigationSystem();
-    if (navsys == nullptr || VirtualSurface == nullptr)
+    if (navsys == nullptr || Area == nullptr)
     {
         return;
     }
     auto navmesh = Cast<ARecastNavMesh>(navsys->GetMainNavData());
     auto TileSize = navmesh->TileSizeUU;
+
+    auto origin = Area->GetOrigin();
+    auto coord = Surface->VirtualNavMeshData.Coord;
+    auto volume = Area->GetVolume(coord);
+
     //
-    int32 TileX;
-    int32 TileY;
+    int32 TileX = coord.X + origin.X;
+    int32 TileY = coord.Y + origin.Y;
     TArray<int32> TileIndices;
-    navmesh->GetNavMeshTileXY(VirtualSurface->GetActorLocation(), TileX, TileY);
-    // bool HasTile = navmesh->GetNavMeshTileXY(FVector::ZeroVector, TileX, TileY);
-    navmesh->GetNavMeshTilesAt(TileX, TileY, TileIndices);
-    navmesh->GetNavMeshTilesAt(TileX + 1, TileY, TileIndices);
-    navmesh->GetNavMeshTilesAt(TileX - 1, TileY, TileIndices);
-    navmesh->GetNavMeshTilesAt(TileX, TileY + 1, TileIndices);
-    navmesh->GetNavMeshTilesAt(TileX, TileY - 1, TileIndices);
-    if (TileIndices.Num() == 0)
+    return;
+    for (int x = 0; x < volume.X; x++)
+    { 
+        for (int y = 0; y < volume.Y; y++)
+        {
+
+            navmesh->GetNavMeshTilesAt(TileX + x, TileY + y, TileIndices);
+        }
+    }*/
+    
+   // navmesh->GetNavMeshTileXY(VirtualSurface->GetActorLocation(), TileX, TileY);
+    /*if (TileIndices.Num() == 0)
     {
         return;
     }
