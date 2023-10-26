@@ -12,6 +12,12 @@
 // Sets default values
 AVirtualNavMeshArea::AVirtualNavMeshArea()
 {
+	
+    // Initialize PendingAddings as an empty map
+    PendingAddings = std::unordered_map<AActor*, FVirtualNavMesh>();
+	Coord2Actor = std::unordered_map<FIntVector, AActor *, FIntVectorHash>();
+	Coord2Volume = std::unordered_map<FIntVector, FIntVector, FIntVectorHash>();
+	
 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 	PrimaryActorTick.bStartWithTickEnabled = true;
@@ -19,6 +25,8 @@ AVirtualNavMeshArea::AVirtualNavMeshArea()
 
 	SetRootComponent(GetBrushComponent());
 	RootComponent->SetMobility(EComponentMobility::Static);
+
+	//TODO initialize pendingaddings
 }
 
 void AVirtualNavMeshArea::BeginPlay()
@@ -45,8 +53,8 @@ void AVirtualNavMeshArea::LazyInit()
 	auto HalfSize = Bounds.BoxExtent; // box extent is half the size
 	auto Min = GetActorLocation() - HalfSize;
 	auto Max = GetActorLocation() + HalfSize;
-	auto MinInt = FIntVector(ceilf(Min.Y/CellSize), ceilf(Min.Y/CellSize), ceilf(Min.Z/CellSize));
-	auto MaxInt = FIntVector(floorf(Max.Y/CellSize), floorf(Max.Y/CellSize), floorf(Max.Z/CellSize));
+	auto MinInt = FIntVector(ceilf(Min.X/CellSize), ceilf(Min.Y/CellSize), ceilf(Min.Z/CellSize));
+	auto MaxInt = FIntVector(floorf(Max.X/CellSize), floorf(Max.Y/CellSize), floorf(Max.Z/CellSize));
 
 	AreaBounds = MaxInt - MinInt;
 	GridOffset = MinInt;
@@ -77,7 +85,7 @@ FIntVector AVirtualNavMeshArea::GetVolume(FIntVector ActorCoord)
 
 bool AVirtualNavMeshArea::TryCreateVirtualNavMesh(AActor *realSurfaceActor, FVirtualNavMesh &VirtualNavMesh)
 {
-	if (PendingAddings.find(realSurfaceActor) != PendingAddings.end())
+	if (!PendingAddings.empty() && PendingAddings.find(realSurfaceActor) != PendingAddings.end())
 	{
 		UE_LOG(LogTemp, Warning, TEXT("VNMA: Actor has already been registered: %s"), *realSurfaceActor->GetName());
 		return false;
