@@ -7,9 +7,32 @@
 #include "NavigationSystem.h"
 #include "CoreMinimal.h"
 #include "LocalVertexFactory.h"
+#include "Math/Color.h"
+#include "Math/UnrealMathUtility.h"
 
 void DNavSurfaceComponentVisualizer::DrawVisualization(const UActorComponent *Component, const FSceneView *View, FPrimitiveDrawInterface *PDI)
 {
+
+    auto area = Cast<AVirtualNavMeshArea>(Component->GetOwner());
+
+    auto extend = FVector(area->CellSize/2, area->CellSize/2, area->CellSize/2);
+    if(area->Grid.empty()) return;
+
+    for (int x = 0; x < area->Grid.size(); x++)
+    { 
+        for (int y = 0; y < area->Grid[x].size(); y++)
+        {        
+            for (int z = 0; z < area->Grid[x][y].size(); z++)
+            {        
+                FVector center;
+                area->GetCoordPoisition(FIntVector(x,y,z), center);
+                auto color = area->Grid[x][y][z]? FLinearColor::Green : FLinearColor::Red;
+                DrawColorBox(PDI, center, extend, color);
+            }
+        }
+    }
+    
+
     /*const UDynamicNavSurfaceComponent* Surface = Cast<UDynamicNavSurfaceComponent>(Component);
     auto Area = Surface->GetVirtualArea();
     auto navsys = Surface->GetWorld()->GetNavigationSystem();
@@ -82,4 +105,38 @@ FVector DNavSurfaceComponentVisualizer::Virtual2WorldPosition(FVector position, 
     auto world = surface->GetOwner()->GetTransform().TransformPosition(local);
     return world;
     */
+}
+
+void DNavSurfaceComponentVisualizer::DrawColorBox(FPrimitiveDrawInterface *PDI, FVector Center, const FVector &Extent, const FLinearColor &Color)
+{
+    
+    const FVector Min = -Extent;
+    const FVector Max = Extent;
+
+    const FVector Vertices[8] = {
+        FVector(Min.X, Min.Y, Min.Z),
+        FVector(Max.X, Min.Y, Min.Z),
+        FVector(Min.X, Max.Y, Min.Z),
+        FVector(Max.X, Max.Y, Min.Z),
+        FVector(Min.X, Min.Y, Max.Z),
+        FVector(Max.X, Min.Y, Max.Z),
+        FVector(Min.X, Max.Y, Max.Z),
+        FVector(Max.X, Max.Y, Max.Z)
+    };
+
+    // Draw the lines to create the box
+    PDI->DrawLine(Vertices[0], Vertices[1], Color, SDPG_World);
+    PDI->DrawLine(Vertices[1], Vertices[3], Color, SDPG_World);
+    PDI->DrawLine(Vertices[3], Vertices[2], Color, SDPG_World);
+    PDI->DrawLine(Vertices[2], Vertices[0], Color, SDPG_World);
+
+    PDI->DrawLine(Vertices[4], Vertices[5], Color, SDPG_World);
+    PDI->DrawLine(Vertices[5], Vertices[7], Color, SDPG_World);
+    PDI->DrawLine(Vertices[7], Vertices[6], Color, SDPG_World);
+    PDI->DrawLine(Vertices[6], Vertices[4], Color, SDPG_World);
+
+    PDI->DrawLine(Vertices[0], Vertices[4], Color, SDPG_World);
+    PDI->DrawLine(Vertices[1], Vertices[5], Color, SDPG_World);
+    PDI->DrawLine(Vertices[2], Vertices[6], Color, SDPG_World);
+    PDI->DrawLine(Vertices[3], Vertices[7], Color, SDPG_World);
 }

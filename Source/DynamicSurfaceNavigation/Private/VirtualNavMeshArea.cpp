@@ -8,6 +8,8 @@
 #include <unordered_map>
 #include "NavMesh/RecastNavMesh.h"
 #include "NavigationInvokerComponent.h"
+#include "Components/SceneComponent.h"
+#include "VirtualNavMeshAreaComponent.h"
 
 // Sets default values
 AVirtualNavMeshArea::AVirtualNavMeshArea()
@@ -23,24 +25,25 @@ AVirtualNavMeshArea::AVirtualNavMeshArea()
 	PrimaryActorTick.bStartWithTickEnabled = true;
 	// Create a new scene component and set it as the root component
 
-	SetRootComponent(GetBrushComponent());
-	RootComponent->SetMobility(EComponentMobility::Static);
+    RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("MyRootComponent"));
+	//RootComponent->SetMobility(EComponentMobility::Static);
+	SetRootComponent(RootComponent);
+	
+    auto VirtualNavMeshAreaComponent = CreateDefaultSubobject<UVirtualNavMeshAreaComponent>(TEXT("VirtualNavMeshAreaComponent"));
+    VirtualNavMeshAreaComponent->SetupAttachment(RootComponent); // Attach to the root component or another appropriate component
 
 	//TODO initialize pendingaddings
+	RecalculateGrid();
 }
 
 void AVirtualNavMeshArea::BeginPlay()
 {
 	Super::BeginPlay();
+	Initialized = false;
 }
 
-void AVirtualNavMeshArea::LazyInit()
+void AVirtualNavMeshArea::RecalculateGrid()
 {
-	if (Initialized)
-	{
-		return;
-	}
-
 	float TileSize;
 	GConfig->GetFloat(
 		TEXT("/Script/NavigationSystem.RecastNavMesh"),
@@ -49,8 +52,7 @@ void AVirtualNavMeshArea::LazyInit()
 		GEngineIni);
 	CellSize = TileSize;
 
-	auto Bounds = GetBounds();
-	auto HalfSize = Bounds.BoxExtent; // box extent is half the size
+	auto HalfSize = AreaSize; // box extent is half the size
 	auto Min = GetActorLocation() - HalfSize;
 	auto Max = GetActorLocation() + HalfSize;
 	auto MinInt = FIntVector(ceilf(Min.X/CellSize), ceilf(Min.Y/CellSize), ceilf(Min.Z/CellSize));
@@ -60,9 +62,26 @@ void AVirtualNavMeshArea::LazyInit()
 	GridOffset = MinInt;
 
 	Grid.resize(AreaBounds.X, std::vector<std::vector<bool>>(AreaBounds.Y, std::vector<bool>(AreaBounds.Z, false)));
-	UE_LOG(LogTemp, Warning, TEXT("VNMA Init: Tile: %f, Bounds: %s"), TileSize, *AreaBounds.ToString());
+	UE_LOG(LogTemp, Warning, TEXT("VNMA Init: Tile: %f, Volume: %s ,GridSize: %s"), TileSize,*AreaSize.ToString(), *AreaBounds.ToString());
 	Initialized = true;
 }
+
+void AVirtualNavMeshArea::PostEditChangeProperty(FPropertyChangedEvent &PropertyChangedEvent)
+{
+    // Check if a specific property has changed
+    /*if (PropertyChangedEvent.GetPropertyName() == GET_MEMBER_NAME_CHECKED(AVirtualNavMeshArea, AreaSize))
+    {
+        // Access the new value of the property
+        const UObject* PropertyObject = PropertyChangedEvent.Property->GetOwner<UObject>();
+        if (PropertyObject)
+        {
+			RecalculateGrid();
+        }
+    }*/
+
+			RecalculateGrid();
+}
+
 void AVirtualNavMeshArea::Tick(float DeltaTime)
 {
 	for (const auto &element : PendingAddings)
@@ -101,6 +120,8 @@ bool AVirtualNavMeshArea::TryCreateVirtualNavMesh(AActor *realSurfaceActor, FVir
 	FIntVector Coord;
 	if (FindPlace(Volume, Coord))
 	{
+		
+		UE_LOG(LogTemp, Warning, TEXT("VNMA: Found place for %s: %s"), *realSurfaceActor->GetName(), *Coord.ToString());
 		FTransform VirtualTransform(FRotator::ZeroRotator, GetReservedLocation(Volume, Coord),realSurfaceActor->GetActorScale3D());
 		// reservation data:
 		VirtualNavMesh.Coord = Coord;
@@ -111,6 +132,8 @@ bool AVirtualNavMeshArea::TryCreateVirtualNavMesh(AActor *realSurfaceActor, FVir
 		// pend virtual actor creation:
 		PendingAddings[realSurfaceActor] = VirtualNavMesh;
 		return true;
+	} else {
+		UE_LOG(LogTemp, Warning, TEXT("VNMA: Not enough place for an actor: %s, actor's volume: %s"), *realSurfaceActor->GetName(), *Volume.ToString());
 	}
 	return false;
 }
@@ -144,14 +167,12 @@ void AVirtualNavMeshArea::ReleaseVirtualNavMesh(AActor *realSurfaceActor, FIntVe
 
 FIntVector AVirtualNavMeshArea::GetNavBounds(const FVector Volume)
 {
-	LazyInit();
 	auto ExtenedVolume = Volume + FVector(CellSize / 2, CellSize / 2, CellSize / 2);
 	return FIntVector(ceilf(ExtenedVolume.X / CellSize), ceilf(ExtenedVolume.Y / CellSize), ceilf(ExtenedVolume.Z / CellSize));
 }
 
 bool AVirtualNavMeshArea::FindPlace(const FIntVector Volume, FIntVector &Coord)
 {
-	LazyInit();
 	UE_LOG(LogTemp, Warning, TEXT("VNMA Find place for: %s"), *Volume.ToString());
 
 	for (int z = 0; z <= AreaBounds.Z - Volume.Z; z++)
@@ -196,7 +217,6 @@ bool AVirtualNavMeshArea::FindPlace(const FIntVector Volume, FIntVector &Coord)
 
 void AVirtualNavMeshArea::ReservePlace(const FIntVector Volume, FIntVector Coord)
 {
-	LazyInit();
 
 	Coord2Volume[Coord] = Volume;
 	for (int z = 0; z < Volume.Z; z++)
@@ -224,7 +244,6 @@ void AVirtualNavMeshArea::ReservePlace(const FIntVector Volume, FIntVector Coord
 
 void AVirtualNavMeshArea::ReleasePlace(const FIntVector Volume, FIntVector Coord)
 {
-	LazyInit();
 	Coord2Volume.erase(Coord);
 	for (int z = 0; z < Volume.Z; z++)
 	{
@@ -247,6 +266,11 @@ void AVirtualNavMeshArea::ReleasePlace(const FIntVector Volume, FIntVector Coord
 			}
 		}
 	}
+}
+
+void AVirtualNavMeshArea::GetCoordPoisition(FIntVector Coord, FVector &Position)
+{
+ 	Position = FVector(Coord + GridOffset) * CellSize + CellSize / 2;
 }
 
 FVector AVirtualNavMeshArea::GetReservedLocation(const FIntVector Volume, FIntVector Coord)

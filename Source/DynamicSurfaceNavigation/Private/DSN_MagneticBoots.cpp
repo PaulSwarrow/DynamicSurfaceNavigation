@@ -122,6 +122,8 @@ void UDSN_MagneticBoots::OnReceiveSurface(UDynamicNavSurfaceComponent *Surface)
 	GhostController->Possess(Ghost);
 	DynamicSurfaceRegistered = true;
 	
+	UE_LOG(LogTemp, Warning, TEXT("Character stepped on a dynamic surface: %s"), *CurrentSurface->GetName());
+	
 }
 
 void UDSN_MagneticBoots::OnLooseSurface()
@@ -136,6 +138,7 @@ void UDSN_MagneticBoots::OnLooseSurface()
 		GhostController->Destroy();
 		GhostController = nullptr;
 	}
+	UE_LOG(LogTemp, Warning, TEXT("Character lost a dynamic surface: %s"), *CurrentSurface->GetName());
 	CurrentSurface = nullptr;
 	DynamicSurfaceRegistered = false;
 }

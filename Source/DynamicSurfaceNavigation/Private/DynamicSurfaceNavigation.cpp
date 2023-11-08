@@ -5,6 +5,7 @@
 #include "Modules/ModuleInterface.h"
 #include "DNavSurfaceComponentVisualizer.h"
 #include "DynamicNavSurfaceComponent.h"
+#include "VirtualNavMeshAreaComponent.h"
 #include "UnrealEd.h"
 
 #define LOCTEXT_NAMESPACE "FDynamicSurfaceNavigationModule"
@@ -19,7 +20,7 @@ void FDynamicSurfaceNavigationModule::StartupModule()
         TSharedPtr<DNavSurfaceComponentVisualizer> DSurfaceVisualizer = MakeShareable(new DNavSurfaceComponentVisualizer);
         if (DSurfaceVisualizer.IsValid())
         {
-            GUnrealEd->RegisterComponentVisualizer(UDynamicNavSurfaceComponent::StaticClass()->GetFName(), DSurfaceVisualizer);
+            GUnrealEd->RegisterComponentVisualizer(UVirtualNavMeshAreaComponent::StaticClass()->GetFName(), DSurfaceVisualizer);
             DSurfaceVisualizer->OnRegister();
         }
     }
@@ -32,7 +33,7 @@ void FDynamicSurfaceNavigationModule::ShutdownModule()
     // Check if editor is valid
     if (GUnrealEd)
     {
-        GUnrealEd->UnregisterComponentVisualizer(UDynamicNavSurfaceComponent::StaticClass()->GetFName());
+        GUnrealEd->UnregisterComponentVisualizer(UVirtualNavMeshAreaComponent::StaticClass()->GetFName());
     }
 }
 

@@ -41,7 +41,7 @@ struct FIntVectorHash
 };
 
 UCLASS()
-class DYNAMICSURFACENAVIGATION_API AVirtualNavMeshArea : public ANavMeshBoundsVolume
+class DYNAMICSURFACENAVIGATION_API AVirtualNavMeshArea : public AActor
 {
 	GENERATED_BODY()
 
@@ -52,9 +52,14 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "DynamicSurfaceNavigation")
 	bool AllwaysGenerateNavMesh = true;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "DynamicSurfaceNavigation")
+	FVector AreaSize;
 
+	//TODO move to private
 	FIntVector AreaBounds;
 	std::vector<std::vector<std::vector<bool>>> Grid;
+	float CellSize;
 
 	bool TryCreateVirtualNavMesh(AActor *realSurfaceActor, FVirtualNavMesh &VirtualNavMesh);
 
@@ -66,6 +71,8 @@ public:
 	FIntVector GetVolume(FIntVector ActorCoord);
 
 	FIntVector GetOrigin() { return GridOffset; }
+
+	void GetCoordPoisition(FIntVector Coord, FVector &Position);
 
 protected:
 	virtual void BeginPlay() override;
@@ -83,8 +90,9 @@ private:
 	FVector GetReservedLocation(const FIntVector Volume, FIntVector Coord);
 	void AddSurface(AActor *Surface, const FVirtualNavMesh& virtualNavMesh);
 	//void RemoveSurface(AActor *Surface);
-	void LazyInit();
+	void RecalculateGrid();
 	bool Initialized;
-	float CellSize;
 	FIntVector GridOffset;
+
+    virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
 };

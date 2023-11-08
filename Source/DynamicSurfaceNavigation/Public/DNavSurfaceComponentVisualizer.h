@@ -17,4 +17,6 @@ public:
 
 private:
 	FVector Virtual2WorldPosition(FVector position, const UDynamicNavSurfaceComponent *surface);
+
+	void DrawColorBox(FPrimitiveDrawInterface* PDI, FVector Center, const FVector& Extent, const FLinearColor& Color);
 };
