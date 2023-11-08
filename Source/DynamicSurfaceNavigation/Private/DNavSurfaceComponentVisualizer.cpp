@@ -16,17 +16,16 @@ void DNavSurfaceComponentVisualizer::DrawVisualization(const UActorComponent *Co
     auto area = Cast<AVirtualNavMeshArea>(Component->GetOwner());
 
     auto extend = FVector(area->CellSize/2, area->CellSize/2, area->CellSize/2);
-    if(area->Grid.empty()) return;
 
-    for (int x = 0; x < area->Grid.size(); x++)
+    for (int x = 0; x < area->AreaSize.X; x++)
     { 
-        for (int y = 0; y < area->Grid[x].size(); y++)
+        for (int y = 0; y < area->AreaSize.Y; y++)
         {        
-            for (int z = 0; z < area->Grid[x][y].size(); z++)
+            for (int z = 0; z < area->AreaSize.Z; z++)
             {        
-                FVector center;
-                area->GetCoordPoisition(FIntVector(x,y,z), center);
-                auto color = area->Grid[x][y][z]? FLinearColor::Green : FLinearColor::Red;
+                FVector center = area->GetCoordPoisition(FIntVector(x,y,z));
+                //auto color = FLinearColor::Green;
+                auto color = area->Grid.empty()? FLinearColor::Green: area->Grid[x][y][z]? FLinearColor::Red : FLinearColor::Green;
                 DrawColorBox(PDI, center, extend, color);
             }
         }
@@ -110,8 +109,8 @@ FVector DNavSurfaceComponentVisualizer::Virtual2WorldPosition(FVector position, 
 void DNavSurfaceComponentVisualizer::DrawColorBox(FPrimitiveDrawInterface *PDI, FVector Center, const FVector &Extent, const FLinearColor &Color)
 {
     
-    const FVector Min = -Extent;
-    const FVector Max = Extent;
+    const FVector Min = Center - Extent * 0.9f;
+    const FVector Max = Center + Extent * 0.9f;
 
     const FVector Vertices[8] = {
         FVector(Min.X, Min.Y, Min.Z),

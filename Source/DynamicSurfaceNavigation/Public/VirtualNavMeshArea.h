@@ -54,10 +54,8 @@ public:
 	bool AllwaysGenerateNavMesh = true;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "DynamicSurfaceNavigation")
-	FVector AreaSize;
+	FIntVector AreaSize;
 
-	//TODO move to private
-	FIntVector AreaBounds;
 	std::vector<std::vector<std::vector<bool>>> Grid;
 	float CellSize;
 
@@ -70,14 +68,18 @@ public:
 
 	FIntVector GetVolume(FIntVector ActorCoord);
 
-	FIntVector GetOrigin() { return GridOffset; }
+	FIntVector GetOrigin() { 
+		auto Min = GetActorLocation()/CellSize;
+		return FIntVector(ceilf(Min.X), ceilf(Min.Y), ceilf(Min.Z)) - AreaSize/2;
+	}
 
-	void GetCoordPoisition(FIntVector Coord, FVector &Position);
+	FVector GetCoordPoisition(FIntVector Coord);
 
 protected:
 	virtual void BeginPlay() override;
 
 private:
+
 	std::unordered_map<FIntVector, AActor *, FIntVectorHash> Coord2Actor;//actors storage
 	std::unordered_map<FIntVector, FIntVector, FIntVectorHash> Coord2Volume;//volume storage
 	
@@ -92,7 +94,5 @@ private:
 	//void RemoveSurface(AActor *Surface);
 	void RecalculateGrid();
 	bool Initialized;
-	FIntVector GridOffset;
 
-    virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
 };
