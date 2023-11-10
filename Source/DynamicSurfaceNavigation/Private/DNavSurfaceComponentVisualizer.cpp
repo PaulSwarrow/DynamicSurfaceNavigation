@@ -12,8 +12,11 @@
 
 void DNavSurfaceComponentVisualizer::DrawVisualization(const UActorComponent *Component, const FSceneView *View, FPrimitiveDrawInterface *PDI)
 {
+    if(Component == nullptr) return;
+    auto owner = Component->GetOwner();
+    if(owner == nullptr) return;
 
-    auto area = Cast<AVirtualNavMeshArea>(Component->GetOwner());
+    auto area = Cast<AVirtualNavMeshArea>(owner);
 
     auto extend = FVector(area->CellSize/2, area->CellSize/2, area->CellSize/2);
 

@@ -95,18 +95,20 @@ bool AVirtualNavMeshArea::TryCreateVirtualNavMesh(AActor *realSurfaceActor, FVir
 	}
 
 	// calculate required volume:
-	FVector Center;
-	FVector Bounds;
-	realSurfaceActor->GetActorBounds(true, Center, Bounds, true);
-	Bounds *= 2;
-	auto Volume = GetNavBounds(Bounds);
+	FBox absoluteBounds = realSurfaceActor->CalculateComponentsBoundingBoxInLocalSpace(false, true);
+	
+	FVector ActorOffset = absoluteBounds.GetCenter(); //assume actor is not scaled!
+	auto Volume = GetNavBounds(absoluteBounds.GetExtent() * 2);
 	// Search for place available
 	FIntVector Coord;
 	if (FindPlace(Volume, Coord))
 	{
 		
 		UE_LOG(LogTemp, Warning, TEXT("VNMA: Found place for %s: %s"), *realSurfaceActor->GetName(), *Coord.ToString());
-		FTransform VirtualTransform(FRotator::ZeroRotator, GetReservedLocation(Volume, Coord),realSurfaceActor->GetActorScale3D());
+		
+
+		auto position = GetReservedLocation(Volume, Coord) - ActorOffset;
+		FTransform VirtualTransform(FRotator::ZeroRotator, position,realSurfaceActor->GetActorScale3D());
 		// reservation data:
 		VirtualNavMesh.Coord = Coord;
 		VirtualNavMesh.Transform = VirtualTransform;
