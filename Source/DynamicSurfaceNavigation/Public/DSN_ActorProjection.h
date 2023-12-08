@@ -6,6 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "Math/Vector.h"
 #include <Vector>
+#include "Navigation/NavLinkProxy.h"
 #include "DSN_ActorProjection.generated.h"
 
 UCLASS()
@@ -29,7 +30,10 @@ public:
 private:
 	void AddStaticMeshComponent(UStaticMeshComponent *StaticMeshComponent, FTransform ActorTransform);
 
+
 	bool IsRootComponent(UStaticMeshComponent *StaticMeshComponent);
 
 	bool bInitialized;
+
+	void CopyNavLink(ANavLinkProxy *originalNavLinkProxy, FTransform ActorTransform);
 };
