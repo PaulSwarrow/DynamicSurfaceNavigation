@@ -13,7 +13,7 @@
 #include "AITypes.h"
 #include "DSN_MagneticBoots.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnMovementComplete);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnMovementComplete);// Define the delegate type
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class DYNAMICSURFACENAVIGATION_API UDSN_MagneticBoots : public UActorComponent
@@ -43,11 +43,7 @@ public:
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "DynamicSurfaceNavigation")
 	UDynamicNavSurfaceComponent *CurrentSurface;
-	
-    UPROPERTY(BlueprintAssignable, Category = "DynamicSurfaceNavigation")
-    FOnMovementComplete OnMovementCompleteEvent;
-
-	
+		
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "DynamicSurfaceNavigation")
 	AAIController* GetGhostController() { return GhostController; }
 
@@ -56,7 +52,25 @@ public:
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "DynamicSurfaceNavigation")
 	bool HasDynamicSurface() { return DynamicSurfaceRegistered; }
+	
+	
+	UPROPERTY(BlueprintAssignable, Category = "DynamicSurfaceNavigation")
+	FDSNSmartLinkReachedSignature OnSmartLinkReached;
+	
+	UFUNCTION(BlueprintCallable, Category = "DynamicSurfaceNavigation")
+	void ResumeMovement()
+	{
+		if(HasDynamicSurface())
+		{
+			auto followComponent = GhostController->GetPathFollowingComponent();
+			if(followComponent != nullptr)
+			{
+				followComponent->ResumeMove();
+			}			
+		}
+	}
 
+	
 
 private:
 	bool DynamicSurfaceRegistered;
@@ -65,7 +79,7 @@ private:
 
 	UCharacterMovementComponent *MovementComponent;
 
-	ACharacter *Ghost;
+	ADSN_Ghost *Ghost;
 
 	AAIController *GhostController;
 
@@ -76,5 +90,7 @@ private:
 	FVector GetFeetPosition();
 
 	void SetFeetPosition(FVector Position);
-	
+	UFUNCTION(BlueprintCallable, Category="AI|Navigation")
+	void HandleSmartLinkReached(ANavLinkProxy* Link, const FVector& DestinationPoint);
+
 };

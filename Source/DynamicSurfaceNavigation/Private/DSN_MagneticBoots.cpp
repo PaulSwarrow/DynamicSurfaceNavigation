@@ -116,8 +116,11 @@ void UDSN_MagneticBoots::OnReceiveSurface(UDynamicNavSurfaceComponent *Surface)
 	FTransform CurrentTransform(GetOwner()->GetActorRotation(), GetFeetPosition());
 	//const FTransform Location = Surface->TransformWorld2Virtual(GetOwner()->GetActorTransform(), true);
 	const FTransform VirtualTransform = Surface->TransformWorld2Virtual(CurrentTransform, true);
-	Ghost = GetWorld()->SpawnActor<ADSN_Ghost>(ADSN_Ghost::StaticClass(), VirtualTransform, FActorSpawnParameters());
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	Ghost = GetWorld()->SpawnActor<ADSN_Ghost>(ADSN_Ghost::StaticClass(), VirtualTransform, SpawnParams);
 
+	Ghost->OnSmartLinkReached.AddDynamic(this, &UDSN_MagneticBoots::HandleSmartLinkReached);
 	GhostController = GetWorld()->SpawnActor<AAIController>(AAIController::StaticClass(), VirtualTransform, FActorSpawnParameters());
 	GhostController->Possess(Ghost);
 	DynamicSurfaceRegistered = true;
@@ -130,6 +133,7 @@ void UDSN_MagneticBoots::OnLooseSurface()
 {
 	if (Ghost != nullptr)
 	{
+		Ghost->OnSmartLinkReached.RemoveAll(this);	
 		// MovementComponent->Velocity += CurrentSurface->GetVelocityAtPosition(GetOwner()->GetActorLocation());
 		Ghost->Destroy();
 		Ghost = nullptr;
@@ -154,4 +158,11 @@ void UDSN_MagneticBoots::SetFeetPosition(FVector WorldPosition)
 	FVector Position = WorldPosition - GetOwner()->GetActorTransform().TransformVector(FeetOffset);
 	GetOwner()->SetActorLocation(Position);
 }
+
+void UDSN_MagneticBoots::HandleSmartLinkReached(ANavLinkProxy* Link, const FVector& DestinationPoint)
+{	
+	const auto RealWorldDestination = CurrentSurface->TransformPositionVirtual2World(DestinationPoint);
+	OnSmartLinkReached.Broadcast(Link, RealWorldDestination);
+}
+
 

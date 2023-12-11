@@ -18,6 +18,8 @@
 #include "DSN_NavLinkGhost.h"
 #include <stdexcept>
 
+#include "NavLinkCustomComponent.h"
+
 // Sets default values
 ADSN_ActorProjection::ADSN_ActorProjection()
 {
@@ -88,34 +90,26 @@ bool ADSN_ActorProjection::IsRootComponent(UStaticMeshComponent *StaticMeshCompo
 
 void ADSN_ActorProjection::CopyNavLink(ANavLinkProxy *originalNavLinkProxy, FTransform ActorTransform)
 {
-    // Register the new NavLinkProxy
-    UChildActorComponent* ChildActorComponent = NewObject<UChildActorComponent>(this);
-    ChildActorComponent->SetChildActorClass(ADSN_NavLinkGhost::StaticClass());
-    ChildActorComponent->CreateChildActor();
+    //Get world context
+    UWorld* World = GetWorld();
+    if(!World) return;
 
-    // Get the NavLinkProxy from the Child Actor Component
-    ADSN_NavLinkGhost* newNavLinkProxy = Cast<ADSN_NavLinkGhost>(ChildActorComponent->GetChildActor());
-
-    // Attach the Child Actor Component to the root component
-    ChildActorComponent->AttachToComponent(RootComponent, FAttachmentTransformRules::SnapToTargetIncludingScale);
-
+    
+    ADSN_NavLinkGhost* newNavLinkProxy = World->SpawnActor<ADSN_NavLinkGhost>(ADSN_NavLinkGhost::StaticClass());
     auto originalTransform = originalNavLinkProxy->GetActorTransform();
     auto relativeTransform = originalTransform.GetRelativeTransform(ActorTransform);
-    ChildActorComponent->SetRelativeTransform(relativeTransform);
-
-    // Copy properties from the original NavLinkProxy to the new one
-    /*newNavLinkProxy->SetSmartLink(originalNavLinkProxy->GetSmartLink());
-    newNavLinkProxy->SetAreaClass(originalNavLinkProxy->GetAreaClass());
-    newNavLinkProxy->SetSmartLinkEnabled(originalNavLinkProxy->IsSmartLinkEnabled());
-    newNavLinkProxy->SetEnabled(originalNavLinkProxy->IsEnabled());
-    newNavLinkProxy->SetSmartLinkCompName(originalNavLinkProxy->GetSmartLinkCompName());
-    newNavLinkProxy->SetAbsolute(false, false, false);*/
+    newNavLinkProxy->AttachToComponent(GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
+    newNavLinkProxy->SetActorRelativeTransform(relativeTransform);
+    
     newNavLinkProxy->SetActorLabel(*FString("DSN_Projection_" + originalNavLinkProxy->GetName()));
     
     // Modify the in and out points of the new NavLinkProxy
     auto newInPoint = originalNavLinkProxy->PointLinks[0].Left;
     auto newOutPoint = originalNavLinkProxy->PointLinks[0].Right;
 
+    newNavLinkProxy->OriginalNavLinkProxy = originalNavLinkProxy;
     newNavLinkProxy->PointLinks[0].Left = newInPoint;
     newNavLinkProxy->PointLinks[0].Right = newOutPoint;
+
+    newNavLinkProxy->GetSmartLinkComp()->SetLinkData(newInPoint, newOutPoint, ENavLinkDirection::BothWays);
 }

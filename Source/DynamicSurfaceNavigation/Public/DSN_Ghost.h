@@ -6,12 +6,16 @@
 #include "GameFramework/Character.h"
 #include "DSN_Ghost.generated.h"
 
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FDSNSmartLinkReachedSignature, ANavLinkProxy*, navLinkProjection, const FVector&, destination);
 UCLASS()
 class DYNAMICSURFACENAVIGATION_API ADSN_Ghost : public ACharacter
 {
 	GENERATED_BODY()
 
 public:
+	UPROPERTY(BlueprintAssignable)
+	FDSNSmartLinkReachedSignature OnSmartLinkReached;
 	// Sets default values for this character's properties
 	ADSN_Ghost();
 
@@ -24,5 +28,6 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	// Called to bind functionality to input
-	virtual void SetupPlayerInputComponent(class UInputComponent *PlayerInputComponent) override;
+	virtual void SetupPlayerInputComponent(class UInputComponent *PlayerInputComponent) override;  
+
 };
