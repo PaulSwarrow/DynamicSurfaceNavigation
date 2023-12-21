@@ -58,19 +58,7 @@ public:
 	FDSNSmartLinkReachedSignature OnSmartLinkReached;
 	
 	UFUNCTION(BlueprintCallable, Category = "DynamicSurfaceNavigation")
-	void ResumeMovement()
-	{
-		if(HasDynamicSurface())
-		{
-			auto followComponent = GhostController->GetPathFollowingComponent();
-			if(followComponent != nullptr)
-			{
-				followComponent->ResumeMove();
-			}			
-		}
-	}
-
-	
+	void ResumeMovement();
 
 private:
 	bool DynamicSurfaceRegistered;
@@ -89,8 +77,11 @@ private:
 
 	FVector GetFeetPosition();
 
+	bool IsSyncPosition = true;
+
 	void SetFeetPosition(FVector Position);
 	UFUNCTION(BlueprintCallable, Category="AI|Navigation")
 	void HandleSmartLinkReached(ANavLinkProxy* Link, const FVector& DestinationPoint);
 
+	void SyncPosition();
 };

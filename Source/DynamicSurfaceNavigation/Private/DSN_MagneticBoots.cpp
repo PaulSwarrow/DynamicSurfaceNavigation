@@ -61,19 +61,8 @@ void UDSN_MagneticBoots::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 
 	if (Ghost != nullptr)
 	{
-		//Get Virtual Transform (with feet level adjustement):
-		FTransform GhostTransform;
-		GhostTransform.SetLocation(Ghost->GetActorLocation()- FVector:: UpVector * Ghost->GetCapsuleComponent()->GetScaledCapsuleHalfHeight());
-		GhostTransform.SetRotation(Ghost->GetTransform().GetRotation());
-		GhostTransform.SetScale3D(FVector::OneVector);
-		//Transform Virtual to World and restore Upwards direction:
-		FTransform DesiredTransform = Surface->TransformVirtual2World(GhostTransform, true);
-		
-		DesiredTransform.SetLocation(DesiredTransform.GetLocation() - GetOwner()->GetActorTransform().TransformVector(FeetOffset));
-		//Apply Transform (with feet level adjustement):
-		//SetFeetPosition(DesiredTransform.GetLocation()); //feet position correction (if pivot is in the center o the actor)
-		//GetOwner()->SetActorRotation(DesiredTransform.GetRotation());
-		GetOwner()->SetActorTransform(DesiredTransform, Sweep, nullptr, TeleportType);
+		if(IsSyncPosition)
+			SyncPosition();
 		//No scaling required
 
 		
@@ -106,8 +95,6 @@ void UDSN_MagneticBoots::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 	}
 
 }
-
-
 
 void UDSN_MagneticBoots::OnReceiveSurface(UDynamicNavSurfaceComponent *Surface)
 {
@@ -160,9 +147,46 @@ void UDSN_MagneticBoots::SetFeetPosition(FVector WorldPosition)
 }
 
 void UDSN_MagneticBoots::HandleSmartLinkReached(ANavLinkProxy* Link, const FVector& DestinationPoint)
-{	
+{
+	//TODO this is virtual area navigation handler only!
+	IsSyncPosition = false;
+	GhostController->GetPathFollowingComponent()->PauseMove();
 	const auto RealWorldDestination = CurrentSurface->TransformPositionVirtual2World(DestinationPoint);
 	OnSmartLinkReached.Broadcast(Link, RealWorldDestination);
+}
+
+void UDSN_MagneticBoots::ResumeMovement()
+{
+	const FTransform CurrentTransform = GetOwner()->GetActorTransform();
+	//const FTransform Location = Surface->TransformWorld2Virtual(GetOwner()->GetActorTransform(), true);
+	const FTransform VirtualTransform = CurrentSurface->TransformWorld2Virtual(CurrentTransform, true);
+	Ghost->TeleportTo(VirtualTransform.GetLocation(), VirtualTransform.Rotator());
+		
+	IsSyncPosition = true;
+	if(HasDynamicSurface())
+	{
+		if(const auto FollowComponent = GhostController->GetPathFollowingComponent(); FollowComponent != nullptr)
+		{
+			FollowComponent->ResumeMove();
+		}			
+	}
+}
+
+void UDSN_MagneticBoots::SyncPosition()
+{
+	//Get Virtual Transform (with feet level adjustement):
+	FTransform GhostTransform;
+	GhostTransform.SetLocation(Ghost->GetActorLocation()- FVector:: UpVector * Ghost->GetCapsuleComponent()->GetScaledCapsuleHalfHeight());
+	GhostTransform.SetRotation(Ghost->GetTransform().GetRotation());
+	GhostTransform.SetScale3D(FVector::OneVector);
+	//Transform Virtual to World and restore Upwards direction:
+	FTransform DesiredTransform = CurrentSurface->TransformVirtual2World(GhostTransform, true);
+		
+	DesiredTransform.SetLocation(DesiredTransform.GetLocation() - GetOwner()->GetActorTransform().TransformVector(FeetOffset));
+	//Apply Transform (with feet level adjustement):
+	//SetFeetPosition(DesiredTransform.GetLocation()); //feet position correction (if pivot is in the center o the actor)
+	//GetOwner()->SetActorRotation(DesiredTransform.GetRotation());
+	GetOwner()->SetActorTransform(DesiredTransform, Sweep, nullptr, TeleportType);
 }
 
 
