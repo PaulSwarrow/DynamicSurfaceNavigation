@@ -25,10 +25,10 @@ protected:
 
 public:
 	void Init(AActor *originalActor);
-
+	void CopyActor(AActor* Actor, FTransform ActorTransform, bool bChild);
 
 private:
-	void AddStaticMeshComponent(UStaticMeshComponent *StaticMeshComponent, FTransform ActorTransform);
+	void AddStaticMeshComponent(UStaticMeshComponent *StaticMeshComponent, FTransform ActorTransform, bool bChild);
 
 
 	bool IsRootComponent(UStaticMeshComponent *StaticMeshComponent);

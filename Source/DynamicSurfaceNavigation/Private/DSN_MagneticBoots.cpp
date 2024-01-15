@@ -121,11 +121,12 @@ void UDSN_MagneticBoots::OnLooseSurface()
 	if (Ghost != nullptr)
 	{
 		Ghost->OnSmartLinkReached.RemoveAll(this);	
+		GhostController->GetPathFollowingComponent()->OnRequestFinished.RemoveAll(this);
+		GhostController->StopMovement();
 		// MovementComponent->Velocity += CurrentSurface->GetVelocityAtPosition(GetOwner()->GetActorLocation());
 		Ghost->Destroy();
 		Ghost = nullptr;
 
-		GhostController->GetPathFollowingComponent()->OnRequestFinished.RemoveAll(this);
 		GhostController->Destroy();
 		GhostController = nullptr;
 	}
@@ -152,24 +153,44 @@ void UDSN_MagneticBoots::HandleSmartLinkReached(ANavLinkProxy* Link, const FVect
 	IsSyncPosition = false;
 	GhostController->GetPathFollowingComponent()->PauseMove();
 	const auto RealWorldDestination = CurrentSurface->TransformPositionVirtual2World(DestinationPoint);
-	OnSmartLinkReached.Broadcast(Link, RealWorldDestination);
+	Link->ReceiveSmartLinkReached(GetOwner(), RealWorldDestination);
+	//OnSmartLinkReached.Broadcast(Link, RealWorldDestination);
 }
 
 void UDSN_MagneticBoots::ResumeMovement()
 {
-	const FTransform CurrentTransform = GetOwner()->GetActorTransform();
-	//const FTransform Location = Surface->TransformWorld2Virtual(GetOwner()->GetActorTransform(), true);
-	const FTransform VirtualTransform = CurrentSurface->TransformWorld2Virtual(CurrentTransform, true);
-	Ghost->TeleportTo(VirtualTransform.GetLocation(), VirtualTransform.Rotator());
+    ACharacter* Character = Cast<ACharacter>(GetOwner());
+	const FTransform CurrentTransform = Character->GetActorTransform();
+	bool useVirtualSpace = HasDynamicSurface();
+	auto controller = useVirtualSpace? GhostController : Cast<AAIController>(Character->GetController());
+
+	auto NewTransform = useVirtualSpace? CurrentSurface->TransformWorld2Virtual(CurrentTransform, true): CurrentTransform;
+	auto NewLocation = NewTransform.GetLocation();
+
+	if(const auto FollowComponent = controller->GetPathFollowingComponent(); FollowComponent != nullptr)
+	{
+		UNavigationSystemV1* NavSys = FNavigationSystem::GetCurrent<UNavigationSystemV1>(this->GetWorld());
+		FNavLocation  ValidNavMeshLocation;
+		if (NavSys && NavSys->ProjectPointToNavigation(NewLocation, ValidNavMeshLocation))
+		{
+			if(useVirtualSpace)
+			{
+				Ghost->SetActorLocation(ValidNavMeshLocation.Location);
+			}
+			FollowComponent->ResumeMove();
+			
+			// ValidNavMeshLocation now contains the nearest point on the NavMesh
+		}
+		else
+		{
+			controller->StopMovement();
+			// Handle the case where no valid NavMesh location was found
+		}
+		// Resume movement
+	}			
+	
 		
 	IsSyncPosition = true;
-	if(HasDynamicSurface())
-	{
-		if(const auto FollowComponent = GhostController->GetPathFollowingComponent(); FollowComponent != nullptr)
-		{
-			FollowComponent->ResumeMove();
-		}			
-	}
 }
 
 void UDSN_MagneticBoots::SyncPosition()
