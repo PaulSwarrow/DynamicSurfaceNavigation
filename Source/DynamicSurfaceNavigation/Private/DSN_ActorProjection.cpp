@@ -9,6 +9,7 @@
 #include "DSN_NavLinkGhost.h"
 #include <stdexcept>
 
+#include "DSN_NavLinkProjector.h"
 #include "NavLinkCustomComponent.h"
 
 // Sets default values
@@ -30,30 +31,32 @@ void ADSN_ActorProjection::Init(AActor* originalActor)
 
 void ADSN_ActorProjection::CopyActor(AActor* Actor, FTransform ActorTransform, bool bChild)
 {
-	if (Actor->IsA(ANavLinkProxy::StaticClass()))
+	TArray<UActorComponent*> Components;
+	Actor->GetComponents(Components);
+	for (UActorComponent* ActorComponent : Components)
 	{
-		CopyNavLink(Cast<ANavLinkProxy>(Actor), ActorTransform);
-	}
-	else
-	{
-		TArray<UStaticMeshComponent*> StaticMeshComponents;
-		Actor->GetComponents(StaticMeshComponents);
-		for (UStaticMeshComponent* StaticMeshComponent : StaticMeshComponents)
-		{
-			AddStaticMeshComponent(StaticMeshComponent, ActorTransform, bChild);
+		if(ActorComponent->IsA(UStaticMeshComponent::StaticClass()))
+		{				
+			AddStaticMeshComponent(Cast<UStaticMeshComponent>(ActorComponent), ActorTransform, bChild);
 		}
 		
-		TArray<UChildActorComponent*> ChildComponents;
-		Actor->GetComponents(ChildComponents);
-
-		for (UChildActorComponent* ChildComponent : ChildComponents)
+		
+		if(ActorComponent->IsA(UChildActorComponent::StaticClass()))
 		{
-			CopyActor(ChildComponent->GetChildActor(), ActorTransform, true);
+			auto ChildActor = Cast<UChildActorComponent>(ActorComponent)->GetChildActor();
+
+			//TODO MAKE&USE interface IDSN_Projectable 
+			if(ChildActor->IsA(ADSN_NavLinkProjector::StaticClass()))
+			{
+				Cast<ADSN_NavLinkProjector>(ChildActor)->ProjectTo(ActorTransform, GetTransform());
+			}
+			
+			CopyActor(ChildActor, ActorTransform, true);
 		}
+		
 	}
 
 }
-
 
 // Called when the game starts or when spawned
 void ADSN_ActorProjection::BeginPlay()
@@ -78,6 +81,7 @@ void ADSN_ActorProjection::AddStaticMeshComponent(UStaticMeshComponent* StaticMe
 	}
 
 	// set up collision
+	NewMeshComponent->CanCharacterStepUpOn = StaticMeshComponent->CanCharacterStepUpOn;
 	NewMeshComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	NewMeshComponent->SetCollisionObjectType(ECollisionChannel::ECC_WorldStatic);
 	NewMeshComponent->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);
@@ -88,28 +92,3 @@ bool ADSN_ActorProjection::IsRootComponent(UStaticMeshComponent* StaticMeshCompo
 	return StaticMeshComponent->IsRegistered() && StaticMeshComponent->GetAttachParent() == nullptr;
 }
 
-void ADSN_ActorProjection::CopyNavLink(ANavLinkProxy* originalNavLinkProxy, FTransform ActorTransform)
-{
-	//Get world context
-	UWorld* World = GetWorld();
-	if (!World) return;
-
-
-	ADSN_NavLinkGhost* newNavLinkProxy = World->SpawnActor<ADSN_NavLinkGhost>(ADSN_NavLinkGhost::StaticClass());
-	auto originalTransform = originalNavLinkProxy->GetActorTransform();
-	auto relativeTransform = originalTransform.GetRelativeTransform(ActorTransform);
-	newNavLinkProxy->AttachToComponent(GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
-	newNavLinkProxy->SetActorRelativeTransform(relativeTransform);
-
-	newNavLinkProxy->SetActorLabel(*FString("DSN_Projection_" + originalNavLinkProxy->GetName()));
-
-	// Modify the in and out points of the new NavLinkProxy
-	auto newInPoint = originalNavLinkProxy->PointLinks[0].Left;
-	auto newOutPoint = originalNavLinkProxy->PointLinks[0].Right;
-
-	newNavLinkProxy->OriginalNavLinkProxy = originalNavLinkProxy;
-	newNavLinkProxy->PointLinks[0].Left = newInPoint;
-	newNavLinkProxy->PointLinks[0].Right = newOutPoint;
-
-	newNavLinkProxy->GetSmartLinkComp()->SetLinkData(newInPoint, newOutPoint, ENavLinkDirection::BothWays);
-}

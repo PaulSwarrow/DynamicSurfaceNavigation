@@ -34,6 +34,4 @@ private:
 	bool IsRootComponent(UStaticMeshComponent *StaticMeshComponent);
 
 	bool bInitialized;
-
-	void CopyNavLink(ANavLinkProxy *originalNavLinkProxy, FTransform ActorTransform);
 };

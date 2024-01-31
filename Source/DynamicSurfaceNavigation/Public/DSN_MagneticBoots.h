@@ -9,8 +9,6 @@
 #include "DynamicNavSurfaceComponent.h"
 #include "DSN_Ghost.h"
 #include "AIController.h"
-#include "Navigation/PathFollowingComponent.h"
-#include "AITypes.h"
 #include "DSN_MagneticBoots.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnMovementComplete);// Define the delegate type
@@ -53,10 +51,8 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "DynamicSurfaceNavigation")
 	bool HasDynamicSurface() { return DynamicSurfaceRegistered; }
 	
-	
-	UPROPERTY(BlueprintAssignable, Category = "DynamicSurfaceNavigation")
-	FDSNSmartLinkReachedSignature OnSmartLinkReached;
-	
+	UFUNCTION(BlueprintCallable, Category="DynamicSurfaceNavigation")
+	void PauseMovement();
 	UFUNCTION(BlueprintCallable, Category = "DynamicSurfaceNavigation")
 	void ResumeMovement();
 
@@ -80,8 +76,6 @@ private:
 	bool IsSyncPosition = true;
 
 	void SetFeetPosition(FVector Position);
-	UFUNCTION(BlueprintCallable, Category="AI|Navigation")
-	void HandleSmartLinkReached(ANavLinkProxy* Link, const FVector& DestinationPoint);
 
 	void SyncPosition();
 };

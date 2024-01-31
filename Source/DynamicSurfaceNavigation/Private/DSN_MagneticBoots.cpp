@@ -107,7 +107,6 @@ void UDSN_MagneticBoots::OnReceiveSurface(UDynamicNavSurfaceComponent *Surface)
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 	Ghost = GetWorld()->SpawnActor<ADSN_Ghost>(ADSN_Ghost::StaticClass(), VirtualTransform, SpawnParams);
 
-	Ghost->OnSmartLinkReached.AddDynamic(this, &UDSN_MagneticBoots::HandleSmartLinkReached);
 	GhostController = GetWorld()->SpawnActor<AAIController>(AAIController::StaticClass(), VirtualTransform, FActorSpawnParameters());
 	GhostController->Possess(Ghost);
 	DynamicSurfaceRegistered = true;
@@ -120,7 +119,6 @@ void UDSN_MagneticBoots::OnLooseSurface()
 {
 	if (Ghost != nullptr)
 	{
-		Ghost->OnSmartLinkReached.RemoveAll(this);	
 		GhostController->GetPathFollowingComponent()->OnRequestFinished.RemoveAll(this);
 		GhostController->StopMovement();
 		// MovementComponent->Velocity += CurrentSurface->GetVelocityAtPosition(GetOwner()->GetActorLocation());
@@ -147,14 +145,12 @@ void UDSN_MagneticBoots::SetFeetPosition(FVector WorldPosition)
 	GetOwner()->SetActorLocation(Position);
 }
 
-void UDSN_MagneticBoots::HandleSmartLinkReached(ANavLinkProxy* Link, const FVector& DestinationPoint)
+void UDSN_MagneticBoots::PauseMovement()
 {
 	//TODO this is virtual area navigation handler only!
+	MovementComponent->Velocity = FVector::Zero();
 	IsSyncPosition = false;
 	GhostController->GetPathFollowingComponent()->PauseMove();
-	const auto RealWorldDestination = CurrentSurface->TransformPositionVirtual2World(DestinationPoint);
-	Link->ReceiveSmartLinkReached(GetOwner(), RealWorldDestination);
-	//OnSmartLinkReached.Broadcast(Link, RealWorldDestination);
 }
 
 void UDSN_MagneticBoots::ResumeMovement()
@@ -188,7 +184,6 @@ void UDSN_MagneticBoots::ResumeMovement()
 		}
 		// Resume movement
 	}			
-	
 		
 	IsSyncPosition = true;
 }

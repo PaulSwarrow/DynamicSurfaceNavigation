@@ -14,17 +14,32 @@ UDSN_NavMofifier::UDSN_NavMofifier()
 void UDSN_NavMofifier::BeginPlay()
 {
     Super::BeginPlay();
-    OnComponentBeginOverlap.AddDynamic(this, &UDSN_NavMofifier::HandleComponentBeginOverlap);
-	OnComponentEndOverlap.AddDynamic(this, &UDSN_NavMofifier::HandleComponentEndOverlap);
 
-	TSet<AActor*> OverlappedActors;
-	GetOverlappingActors(OverlappedActors);
-	for(const auto &element : OverlappedActors)
-    {
-		HandleComponentBeginOverlap(nullptr, element, nullptr, 0, false, FHitResult());
+	if(!TryUseOwner(GetOwner()))
+	{		
+		OnComponentBeginOverlap.AddDynamic(this, &UDSN_NavMofifier::HandleComponentBeginOverlap);
+		OnComponentEndOverlap.AddDynamic(this, &UDSN_NavMofifier::HandleComponentEndOverlap);
+
+		TSet<AActor*> OverlappedActors;
+		GetOverlappingActors(OverlappedActors);
+		for(const auto &element : OverlappedActors)
+		{
+			HandleComponentBeginOverlap(nullptr, element, nullptr, 0, false, FHitResult());
+		}
 	}
+}
 
-	StartProjection(GetOwner()->GetComponentByClass<UDynamicNavSurfaceComponent>());
+bool UDSN_NavMofifier::TryUseOwner(AActor* Actor)
+{
+	const auto Component = Actor->GetComponentByClass<UDynamicNavSurfaceComponent>();
+	if(Component != nullptr)
+	{
+		StartProjection(Component);
+		return true;
+	}
+	const auto Parent = Actor->GetParentActor();
+	if(Parent != nullptr)  return TryUseOwner(Parent);
+	return false;
 }
 
 void UDSN_NavMofifier::EndPlay(const EEndPlayReason::Type EndPlayReason)

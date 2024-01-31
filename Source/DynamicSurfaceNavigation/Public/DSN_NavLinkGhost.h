@@ -11,18 +11,22 @@
 /**
  * 
  */
+
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FDSNLinkReachedEventSignature, AActor*, Agent, const FVector&, destination);
+
 UCLASS()
 class DYNAMICSURFACENAVIGATION_API ADSN_NavLinkGhost : public ANavLinkProxy
 {
 
 	GENERATED_BODY()
 public:
-    ANavLinkProxy* OriginalNavLinkProxy;
 
     ADSN_NavLinkGhost();
     void SmartLinkReached(UNavLinkCustomComponent* ThisComp, UObject* PathComp, const FVector& DestPoint);
 
-
+    UPROPERTY(BlueprintAssignable)
+    FDSNLinkReachedEventSignature OnSmartLinkReachedEvent;
     // Adding destructor
     virtual ~ADSN_NavLinkGhost()
     {
@@ -41,13 +45,7 @@ protected:
 	UFUNCTION(BlueprintCallable, Category="AI|Navigation")
     void HandleSmartLinkReached(AActor* MovingActor, const FVector& DestinationPoint)
     {
-        // Implement your logic here
-        //cast actor to ADSN_Ghost and call the function
-        if (const ADSN_Ghost* Ghost = Cast<ADSN_Ghost>(MovingActor))
-        {
-            Ghost->OnSmartLinkReached.Broadcast(this->OriginalNavLinkProxy, DestinationPoint);
-        }
-        
+        OnSmartLinkReachedEvent.Broadcast(MovingActor, DestinationPoint);        
     }
 
 };

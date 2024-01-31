@@ -28,12 +28,7 @@ void ADSN_NavLinkGhost::SmartLinkReached(UNavLinkCustomComponent* ThisComp, UObj
 				AActor* Actor = ControllerOwner->GetPawn();
 				if (Actor)
 				{
-					if (const ADSN_Ghost* Ghost = Cast<ADSN_Ghost>(Actor))
-					{
-						Ghost->OnSmartLinkReached.Broadcast(this->OriginalNavLinkProxy, DestPoint);
-					}
-					// Now you have the actor that reached the smart link
-					// Add your custom logic here
+					OnSmartLinkReachedEvent.Broadcast(Actor, DestPoint);					
 				}
 			}
 		}

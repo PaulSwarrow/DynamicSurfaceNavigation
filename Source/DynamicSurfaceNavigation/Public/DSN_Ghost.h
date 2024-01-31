@@ -7,15 +7,14 @@
 #include "DSN_Ghost.generated.h"
 
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FDSNSmartLinkReachedSignature, ANavLinkProxy*, navLinkProjection, const FVector&, destination);
 UCLASS()
 class DYNAMICSURFACENAVIGATION_API ADSN_Ghost : public ACharacter
 {
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(BlueprintAssignable)
-	FDSNSmartLinkReachedSignature OnSmartLinkReached;
+
+	AActor* Origin;
 	// Sets default values for this character's properties
 	ADSN_Ghost();
 
