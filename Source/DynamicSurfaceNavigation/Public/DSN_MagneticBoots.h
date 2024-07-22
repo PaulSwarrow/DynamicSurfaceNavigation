@@ -78,4 +78,6 @@ private:
 	void SetFeetPosition(FVector Position);
 
 	void SyncPosition();
+	
+	bool FindFloor(UDynamicNavSurfaceComponent*& OutComponent);
 };

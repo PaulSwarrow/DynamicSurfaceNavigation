@@ -38,33 +38,18 @@ void UDSN_MagneticBoots::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 	UDynamicNavSurfaceComponent *Surface = nullptr;
-	if (MovementComponent->CurrentFloor.IsWalkableFloor())
+	if (!DynamicSurfaceRegistered && FindFloor(Surface))
 	{
-		// Get UDynamicNavSurfaceComponent from CurrentFloor.HitResult.GetActor() and set it to Surface
-		if (AActor *HitActor = MovementComponent->CurrentFloor.HitResult.GetActor())
-		{
-			Surface = HitActor->FindComponentByClass<UDynamicNavSurfaceComponent>();
-		}
+		OnReceiveSurface(Surface);
 	}
 
-	if (Surface != CurrentSurface)
-	{
-		if (CurrentSurface != nullptr)
-		{
-			OnLooseSurface();
-		}
-		if (Surface != nullptr)
-		{
-			OnReceiveSurface(Surface);
-		}
-	}
+	//TODO loose surface logic
 
 	if (Ghost != nullptr)
 	{
 		if(IsSyncPosition)
 			SyncPosition();
 		//No scaling required
-
 		
 		//GetOwner()->SetActorTransform(DesiredTransform);
 		//auto velocity = MovementComponent->Velocity;
@@ -98,6 +83,8 @@ void UDSN_MagneticBoots::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 
 void UDSN_MagneticBoots::OnReceiveSurface(UDynamicNavSurfaceComponent *Surface)
 {
+    MovementComponent->SetMovementMode(MOVE_Custom);
+	
 	CurrentSurface = Surface;
 	// TODO Create Character actor
 	FTransform CurrentTransform(GetOwner()->GetActorRotation(), GetFeetPosition());
@@ -117,6 +104,7 @@ void UDSN_MagneticBoots::OnReceiveSurface(UDynamicNavSurfaceComponent *Surface)
 
 void UDSN_MagneticBoots::OnLooseSurface()
 {
+	//TODO: reset movement component mode
 	if (Ghost != nullptr)
 	{
 		GhostController->GetPathFollowingComponent()->OnRequestFinished.RemoveAll(this);
@@ -203,6 +191,44 @@ void UDSN_MagneticBoots::SyncPosition()
 	//SetFeetPosition(DesiredTransform.GetLocation()); //feet position correction (if pivot is in the center o the actor)
 	//GetOwner()->SetActorRotation(DesiredTransform.GetRotation());
 	GetOwner()->SetActorTransform(DesiredTransform, Sweep, nullptr, TeleportType);
+}
+
+// Function to perform the raycast and get the floor component
+bool UDSN_MagneticBoots::FindFloor(UDynamicNavSurfaceComponent*& OutComponent)
+{
+	// Initialize the output parameter
+	OutComponent = nullptr;
+
+	auto actor = GetOwner();
+	// Get the actor's location
+	auto StartLocation = actor->GetActorLocation();
+	auto EndLocation = StartLocation - FVector(0.0f, 0.0f, 1000.0f); // Raycast 1000 units downwards
+
+	FHitResult HitResult;
+	FCollisionQueryParams CollisionParams;
+	CollisionParams.AddIgnoredActor(actor); // Ignore the actor itself in the raycast
+
+	// Perform the raycast
+	bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, StartLocation, EndLocation, ECC_Visibility, CollisionParams);
+
+	if (bHit)
+	{
+		// Check if we hit a valid floor object
+		AActor* HitActor = HitResult.GetActor();
+		UPrimitiveComponent* HitComponent = HitResult.GetComponent();
+
+		if (HitActor && HitComponent)
+		{			
+			OutComponent = HitActor->FindComponentByClass<UDynamicNavSurfaceComponent>();
+			// Check if the component has a specific tag (if needed)
+			if (OutComponent != nullptr)
+			{
+				return true; // Successfully found the floor component
+			}
+		}
+	}
+	
+	return false; // No valid floor component found
 }
 
 

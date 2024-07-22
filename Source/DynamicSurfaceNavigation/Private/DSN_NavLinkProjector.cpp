@@ -118,23 +118,31 @@ void ADSN_NavLinkProjector::ProjectNavLink(ADSN_NavLinkProjector* Projector, FTr
 
 void ADSN_NavLinkProjector::HandleSmartLinkReached(AActor* Actor, const FVector& Vector)
 {
-	auto Agent = Actor;
-	if(Agent == nullptr)
+	if(Actor == nullptr)
 	{
 		UE_LOG(LogTemp, Error, TEXT("NavLink Reached: Null ACTOR!"));
 		return;
 	}
-	if(Actor->IsA(ADSN_Ghost::StaticClass()))
+
+	ADSN_Ghost* GhostActor = Cast<ADSN_Ghost>(Actor);
+	AActor* Agent = (GhostActor != nullptr) ? GhostActor->Origin : Actor;
+
+	if(Agent == nullptr)
 	{
-		Agent = Cast<ADSN_Ghost>(Actor)->Origin;	
+		UE_LOG(LogTemp, Error, TEXT("Invalid Agent derived from Actor."));
+		return;
 	}
-	
-	auto boots = Agent->GetComponentByClass<UDSN_MagneticBoots>();
-	if(boots != nullptr)
+    
+	UDSN_MagneticBoots* boots = Cast<UDSN_MagneticBoots>(Agent->GetComponentByClass(UDSN_MagneticBoots::StaticClass()));
+	if(boots)
 	{
 		boots->PauseMovement();
 	}
-	
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("UDSN_MagneticBoots component not found on the agent."));
+	}
+    
 	OnNavLinkEnter(Agent);
 }
 

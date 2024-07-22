@@ -1,8 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
+#include "DSN_NavLinkGhost.h"
 #include "NavLinkCustomComponent.h"
 #include "Navigation/PathFollowingComponent.h"
-#include "DSN_NavLinkGhost.h"
 
 ADSN_NavLinkGhost::ADSN_NavLinkGhost()
 {
