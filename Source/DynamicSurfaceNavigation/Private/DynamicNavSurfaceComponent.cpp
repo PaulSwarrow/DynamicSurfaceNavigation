@@ -20,7 +20,11 @@ void UDynamicNavSurfaceComponent::BeginPlay()
     Super::BeginPlay();
     // TODO find VirtualNavMeshArea actor in the level
     VirtualArea = Cast<AVirtualNavMeshArea>(UGameplayStatics::GetActorOfClass(GetWorld(), AVirtualNavMeshArea::StaticClass()));
-    VirtualArea->TryCreateVirtualNavMesh(GetOwner(), VirtualNavMeshData);
+    if(VirtualArea->TryCreateVirtualNavMesh(GetOwner(), VirtualNavMeshData))
+    {
+        IsInitialized = true;
+        OnInitialized.Broadcast();
+    }
 }
 
 void UDynamicNavSurfaceComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)

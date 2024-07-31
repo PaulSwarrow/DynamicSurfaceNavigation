@@ -9,6 +9,7 @@
 #include "Kismet/KismetSystemLibrary.h"
 #include "AI/Navigation/NavigationTypes.h"
 #include "GameFramework/Pawn.h"
+#include "NavLinkCustomComponent.h"
 
 FDSN_Point UDSN_FunctionLibrary::DSN_ParseLocation(UObject *WorldContextObject, FVector origin)
 {
@@ -133,5 +134,21 @@ void UDSN_FunctionLibrary::CreateNavigationTaskData(APawn *Pawn, const FVector G
     if (Boots != nullptr && Boots->HasDynamicSurface())
     {
         PawnToUse = Boots->GetGhost();
+    }
+}
+
+void UDSN_FunctionLibrary::SetNavLinkPoints(ANavLinkProxy* NavLinkProxy, FVector StartPoint, FVector EndPoint, ENavLinkDirection::Type Direction)
+{
+    if (NavLinkProxy && NavLinkProxy->PointLinks.Num() > 0)
+    {
+        NavLinkProxy->PointLinks[0].Left = StartPoint;
+        NavLinkProxy->PointLinks[0].Right = EndPoint;
+        
+        // Get the UNavLinkCustomComponent and set smart link points
+        UNavLinkCustomComponent* SmartLinkComp = NavLinkProxy->FindComponentByClass<UNavLinkCustomComponent>();
+        if (SmartLinkComp)
+        {
+            SmartLinkComp->SetLinkData(StartPoint, EndPoint, Direction);
+        }
     }
 }

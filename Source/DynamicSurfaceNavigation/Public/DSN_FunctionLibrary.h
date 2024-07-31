@@ -53,6 +53,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "DynamicSurfaceNavigation")
 	static void CreateNavigationTaskData(APawn *Pawn, const FVector GoalLocation, AActor *GoalActor, bool ConvertLocation, APawn *&PawnToUse, FVector &TargetLocation, AActor *&TargetActor);
 
+	UFUNCTION(BlueprintCallable, Category = "DynamicSurfaceNavigation")
+	static void SetNavLinkPoints(ANavLinkProxy* NavLinkProxy, FVector StartPoint, FVector EndPoint, ENavLinkDirection::Type Direction);
 private:
 	static FDSN_Point DSN_ParseLocation(UObject* WorldContextObject, FVector origin); 
 

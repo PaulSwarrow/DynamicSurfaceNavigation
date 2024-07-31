@@ -5,12 +5,10 @@
 #include "Math/Vector.h"
 #include "Engine/World.h"
 #include "AI/Navigation/NavigationTypes.h"
-#include "Navigation/NavLinkProxy.h"
-#include "DSN_NavLinkGhost.h"
+#include "IDSNProjectableChild.h"
 #include <stdexcept>
 
-#include "DSN_NavLinkProjector.h"
-#include "NavLinkCustomComponent.h"
+#include "IDSNProjectableChild.h"
 
 // Sets default values
 ADSN_ActorProjection::ADSN_ActorProjection()
@@ -43,17 +41,16 @@ void ADSN_ActorProjection::CopyActor(AActor* Actor, FTransform ActorTransform, b
 		
 		if(ActorComponent->IsA(UChildActorComponent::StaticClass()))
 		{
+
 			auto ChildActor = Cast<UChildActorComponent>(ActorComponent)->GetChildActor();
 
-			//TODO MAKE&USE interface IDSN_Projectable 
-			if(ChildActor->IsA(ADSN_NavLinkProjector::StaticClass()))
+			if (ChildActor->GetClass()->ImplementsInterface(UDSNProjectableChild::StaticClass()))
 			{
-				Cast<ADSN_NavLinkProjector>(ChildActor)->ProjectTo(ActorTransform, GetTransform());
+				IDSNProjectableChild::Execute_ProjectTo(ChildActor, ActorTransform, GetTransform(), this);
 			}
 			
 			CopyActor(ChildActor, ActorTransform, true);
 		}
-		
 	}
 
 }
